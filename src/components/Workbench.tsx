@@ -126,7 +126,9 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   // Check for pending image transferred from the homepage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setTrialUsed(localStorage.getItem("carvona_trial_used") === "true");
+      setTimeout(() => {
+        setTrialUsed(localStorage.getItem("carvona_trial_used") === "true");
+      }, 0);
     }
     const pendingImage = sessionStorage.getItem("carvona_pending_image");
     const pendingName = sessionStorage.getItem("carvona_pending_name") || "uploaded-image.jpg";
