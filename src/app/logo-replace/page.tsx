@@ -43,7 +43,7 @@ export default function LogoReplacePage() {
 
           {/* Workbench focused on Logo Replacement */}
           <div className="w-full">
-            <Workbench defaultTool="logo" />
+            <Workbench defaultTool="logo" hideTabs={true} />
           </div>
         </div>
       </main>
