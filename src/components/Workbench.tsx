@@ -272,18 +272,7 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
     return () => window.removeEventListener("mouseup", handleMouseUp);
   }, [draggingIdx]);
 
-  // Helper to convert dataURL to Blob
-  const dataURLtoBlob = (dataurl: string): Blob => {
-    const arr = dataurl.split(",");
-    const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], { type: mime });
-  };
+
 
   // Request high-res perspective warped output from FastAPI
   const processImageRequest = async (): Promise<Blob | null> => {
