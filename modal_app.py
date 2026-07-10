@@ -33,13 +33,13 @@ image = (
         "requests==2.32.3"
     )
     .run_function(download_weights)
+    .add_local_file("main.py", remote_path="/root/main.py")
 )
 
-# 3. Mount the local codebase and serve the FastAPI app as an ASGI application
+# 3. Serve the FastAPI app as an ASGI application
 # This exposes all /api/detect and /api/process routes automatically on Modal!
 @app.function(
     image=image,
-    mounts=[modal.Mount.from_local_file("main.py", remote_path="/root/main.py")],
     cpu=2.0,
     memory=2048
 )
