@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, MouseEvent as ReactMouseEvent } from "react";
+import React, { useState, useRef, useEffect, useCallback, MouseEvent as ReactMouseEvent } from "react";
 import { Upload, Sliders, RefreshCw, Download, Image as ImageIcon, Check, Info } from "lucide-react";
 import PaymentModal from "./PaymentModal";
 
@@ -103,7 +103,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [imgDimensions, setImgDimensions] = useState<{ width: number; height: number } | null>(null);
 
-  const selectSample = async (sample: typeof SAMPLE_IMAGES[0]) => {
+  const selectSample = useCallback(async (sample: typeof SAMPLE_IMAGES[0]) => {
     if (processedImage) {
       window.URL.revokeObjectURL(processedImage);
       setProcessedImage(null);
@@ -135,7 +135,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
         return prev + 5;
       });
     }, 45);
-  };
+  }, [processedImage]);
 
   // Check for pending image transferred from the homepage on mount
   useEffect(() => {
@@ -224,7 +224,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
         }
       }, 0);
     }
-  }, []);
+  }, [selectSample]);
 
   const updateDimensions = () => {
     if (imgRef.current) {
@@ -378,67 +378,8 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
     return () => window.removeEventListener("mouseup", handleMouseUp);
   }, [draggingIdx]);
 
-  // Clean up blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      if (processedImage) {
-        window.URL.revokeObjectURL(processedImage);
-      }
-    };
-  }, [processedImage]);
-
-  // Trigger high-res or preview processing automatically
-  const triggerAutoProcess = async () => {
-    if (!image || scanning || !rawFile) return;
-    setProcessing(true);
-    try {
-      const blob = await processImageRequest();
-      if (blob) {
-        setProcessedImage((prev) => {
-          if (prev) {
-            window.URL.revokeObjectURL(prev);
-          }
-          return window.URL.createObjectURL(blob);
-        });
-      }
-    } catch (err) {
-      console.error("Auto processing failed:", err);
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // Debounced auto-processing trigger
-  useEffect(() => {
-    if (scanning || draggingIdx !== null || !image || !rawFile) return;
-
-    const delayDebounce = setTimeout(() => {
-      triggerAutoProcess();
-    }, 150);
-
-    return () => clearTimeout(delayDebounce);
-  }, [
-    keypoints,
-    selectedTool,
-    blurStyle,
-    blurIntensity,
-    solidColor,
-    selectedLogo,
-    logoScale,
-    logoRotate,
-    logoSkewX,
-    logoSkewY,
-    customLogoUrl,
-    image,
-    scanning,
-    draggingIdx,
-    rawFile
-  ]);
-
-
-
   // Request high-res perspective warped output from FastAPI
-  const processImageRequest = async (): Promise<Blob | null> => {
+  const processImageRequest = useCallback(async (): Promise<Blob | null> => {
     if (!image) return null;
 
     const formData = new FormData();
@@ -488,7 +429,80 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       setDetectionError("Warping/Processing failed. Ensure that your python backend is running.");
       return null;
     }
-  };
+  }, [
+    image,
+    rawFile,
+    imageName,
+    selectedTool,
+    keypoints,
+    blurStyle,
+    blurIntensity,
+    solidColor,
+    selectedLogo,
+    logoScale,
+    logoRotate,
+    logoSkewX,
+    logoSkewY,
+    customLogoFile
+  ]);
+
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (processedImage) {
+        window.URL.revokeObjectURL(processedImage);
+      }
+    };
+  }, [processedImage]);
+
+  // Trigger high-res or preview processing automatically
+  const triggerAutoProcess = useCallback(async () => {
+    if (!image || scanning || !rawFile) return;
+    setProcessing(true);
+    try {
+      const blob = await processImageRequest();
+      if (blob) {
+        setProcessedImage((prev) => {
+          if (prev) {
+            window.URL.revokeObjectURL(prev);
+          }
+          return window.URL.createObjectURL(blob);
+        });
+      }
+    } catch (err) {
+      console.error("Auto processing failed:", err);
+    } finally {
+      setProcessing(false);
+    }
+  }, [image, scanning, rawFile, processImageRequest]);
+
+  // Debounced auto-processing trigger
+  useEffect(() => {
+    if (scanning || draggingIdx !== null || !image || !rawFile) return;
+
+    const delayDebounce = setTimeout(() => {
+      triggerAutoProcess();
+    }, 150);
+
+    return () => clearTimeout(delayDebounce);
+  }, [
+    keypoints,
+    selectedTool,
+    blurStyle,
+    blurIntensity,
+    solidColor,
+    selectedLogo,
+    logoScale,
+    logoRotate,
+    logoSkewX,
+    logoSkewY,
+    customLogoUrl,
+    image,
+    scanning,
+    draggingIdx,
+    rawFile,
+    triggerAutoProcess
+  ]);
 
   const handleDownload = async () => {
     if (!image) return;
