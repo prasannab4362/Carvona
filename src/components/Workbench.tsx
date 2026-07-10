@@ -153,60 +153,62 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       }
 
       // User upload
-      setImage(pendingImage);
-      setImageName(pendingName);
-      setScanning(true);
-      setScanProgress(20);
-      setDetectionError(null);
+      setTimeout(() => {
+        setImage(pendingImage);
+        setImageName(pendingName);
+        setScanning(true);
+        setScanProgress(20);
+        setDetectionError(null);
 
-      try {
-        const blob = dataURLtoBlob(pendingImage);
-        const file = new File([blob], pendingName, { type: blob.type });
-        setRawFile(file);
+        try {
+          const blob = dataURLtoBlob(pendingImage);
+          const file = new File([blob], pendingName, { type: blob.type });
+          setRawFile(file);
 
-        const formData = new FormData();
-        formData.append("file", file);
+          const formData = new FormData();
+          formData.append("file", file);
 
-        fetch("/api/detect", {
-          method: "POST",
-          body: formData,
-        })
-          .then((res) => {
-            setScanProgress(75);
-            if (!res.ok) throw new Error("API failed");
-            return res.json();
+          fetch("/api/detect", {
+            method: "POST",
+            body: formData,
           })
-          .then((data) => {
-            setScanProgress(100);
-            if (data.success && data.keypoints) {
-              setKeypoints(data.keypoints);
-            } else {
+            .then((res) => {
+              setScanProgress(75);
+              if (!res.ok) throw new Error("API failed");
+              return res.json();
+            })
+            .then((data) => {
+              setScanProgress(100);
+              if (data.success && data.keypoints) {
+                setKeypoints(data.keypoints);
+              } else {
+                setKeypoints([
+                  { x: 0.40, y: 0.46 },
+                  { x: 0.60, y: 0.46 },
+                  { x: 0.60, y: 0.54 },
+                  { x: 0.40, y: 0.54 },
+                ]);
+                setDetectionError("License plate not automatically detected. Adjust corners manually.");
+              }
+            })
+            .catch(() => {
               setKeypoints([
                 { x: 0.40, y: 0.46 },
                 { x: 0.60, y: 0.46 },
                 { x: 0.60, y: 0.54 },
                 { x: 0.40, y: 0.54 },
               ]);
-              setDetectionError("License plate not automatically detected. Adjust corners manually.");
-            }
-          })
-          .catch(() => {
-            setKeypoints([
-              { x: 0.40, y: 0.46 },
-              { x: 0.60, y: 0.46 },
-              { x: 0.60, y: 0.54 },
-              { x: 0.40, y: 0.54 },
-            ]);
-            setDetectionError("Unable to connect to AI server. Adjust coordinates manually.");
-          })
-          .finally(() => {
-            setScanning(false);
-          });
-      } catch (err) {
-        console.error(err);
-        setScanning(false);
-        setDetectionError("Error processing transferred photo.");
-      }
+              setDetectionError("Unable to connect to AI server. Adjust coordinates manually.");
+            })
+            .finally(() => {
+              setScanning(false);
+            });
+        } catch (err) {
+          console.error(err);
+          setScanning(false);
+          setDetectionError("Error processing transferred photo.");
+        }
+      }, 0);
     }
   }, []);
 
