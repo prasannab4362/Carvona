@@ -11,8 +11,8 @@ export default function Footer() {
         {/* Brand column */}
         <div className="md:col-span-2 flex flex-col gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
-              <Car size={16} />
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow">
+              <img src="/logo.jpg" alt="Carvona Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-mono text-lg font-bold tracking-tight text-text-main">
               CARVONA
