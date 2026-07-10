@@ -43,9 +43,9 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 md:px-10 flex justify-between items-center">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-md shadow-primary/20 group-hover:scale-105 transition-transform duration-300">
-            <Car size={20} className="stroke-[2.5]" />
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-primary/10 group-hover:scale-105 transition-transform duration-300">
+            <img src="/logo.jpg" alt="Carvona Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-mono text-xl font-bold tracking-tight text-text-main">
             CARVONA<span className="text-primary">.</span>
