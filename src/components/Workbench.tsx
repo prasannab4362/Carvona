@@ -93,12 +93,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
 
   // Trial / Payment States
   const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
-  const [trialUsed, setTrialUsed] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("carvona_trial_used") === "true";
-    }
-    return false;
-  });
+  const [trialUsed, setTrialUsed] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -130,6 +125,9 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
 
   // Check for pending image transferred from the homepage on mount
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setTrialUsed(localStorage.getItem("carvona_trial_used") === "true");
+    }
     const pendingImage = sessionStorage.getItem("carvona_pending_image");
     const pendingName = sessionStorage.getItem("carvona_pending_name") || "uploaded-image.jpg";
     const pendingType = sessionStorage.getItem("carvona_pending_type");
