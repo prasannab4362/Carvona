@@ -46,7 +46,19 @@ interface Point {
   y: number; // normalized (0 to 1)
 }
 
-export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blur" | "logo" }) {
+const dataURLtoBlob = (dataurl: string): Blob => {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+};
+
+export default function Workbench({ defaultTool = "blur", hideTabs = false }: { defaultTool?: "blur" | "logo"; hideTabs?: boolean }) {
   const [image, setImage] = useState<string | null>(null);
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [imageName, setImageName] = useState<string>("");
@@ -116,12 +128,84 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
     }, 45);
   };
 
-  // Pre-load default Corvette image on first load
+  // Check for pending image transferred from the homepage on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      selectSample(SAMPLE_IMAGES[0]);
-    }, 0);
-    return () => clearTimeout(timer);
+    const pendingImage = sessionStorage.getItem("carvona_pending_image");
+    const pendingName = sessionStorage.getItem("carvona_pending_name") || "uploaded-image.jpg";
+    const pendingType = sessionStorage.getItem("carvona_pending_type");
+    const pendingSampleId = sessionStorage.getItem("carvona_pending_sample_id");
+
+    if (pendingImage) {
+      // Clear cache immediately
+      sessionStorage.removeItem("carvona_pending_image");
+      sessionStorage.removeItem("carvona_pending_name");
+      sessionStorage.removeItem("carvona_pending_type");
+      sessionStorage.removeItem("carvona_pending_sample_id");
+
+      if (pendingType === "sample" && pendingSampleId) {
+        const sample = SAMPLE_IMAGES.find((s) => s.id === pendingSampleId);
+        if (sample) {
+          selectSample(sample);
+          return;
+        }
+      }
+
+      // User upload
+      setImage(pendingImage);
+      setImageName(pendingName);
+      setScanning(true);
+      setScanProgress(20);
+      setDetectionError(null);
+
+      try {
+        const blob = dataURLtoBlob(pendingImage);
+        const file = new File([blob], pendingName, { type: blob.type });
+        setRawFile(file);
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("/api/detect", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => {
+            setScanProgress(75);
+            if (!res.ok) throw new Error("API failed");
+            return res.json();
+          })
+          .then((data) => {
+            setScanProgress(100);
+            if (data.success && data.keypoints) {
+              setKeypoints(data.keypoints);
+            } else {
+              setKeypoints([
+                { x: 0.40, y: 0.46 },
+                { x: 0.60, y: 0.46 },
+                { x: 0.60, y: 0.54 },
+                { x: 0.40, y: 0.54 },
+              ]);
+              setDetectionError("License plate not automatically detected. Adjust corners manually.");
+            }
+          })
+          .catch(() => {
+            setKeypoints([
+              { x: 0.40, y: 0.46 },
+              { x: 0.60, y: 0.46 },
+              { x: 0.60, y: 0.54 },
+              { x: 0.40, y: 0.54 },
+            ]);
+            setDetectionError("Unable to connect to AI server. Adjust coordinates manually.");
+          })
+          .finally(() => {
+            setScanning(false);
+          });
+      } catch (err) {
+        console.error(err);
+        setScanning(false);
+        setDetectionError("Error processing transferred photo.");
+      }
+    }
   }, []);
 
   const updateDimensions = () => {
@@ -537,28 +621,30 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
         </div>
 
         {/* Tab Selection */}
-        <div className="grid grid-cols-2 p-1 bg-section rounded-xl border border-border-light">
-          <button
-            onClick={() => setSelectedTool("blur")}
-            className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-              selectedTool === "blur"
-                ? "bg-white text-primary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            }`}
-          >
-            Plate Blur
-          </button>
-          <button
-            onClick={() => setSelectedTool("logo")}
-            className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-              selectedTool === "logo"
-                ? "bg-white text-primary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            }`}
-          >
-            Logo Replacement
-          </button>
-        </div>
+        {!hideTabs && (
+          <div className="grid grid-cols-2 p-1 bg-section rounded-xl border border-border-light">
+            <button
+              onClick={() => setSelectedTool("blur")}
+              className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                selectedTool === "blur"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-main"
+              }`}
+            >
+              Plate Blur
+            </button>
+            <button
+              onClick={() => setSelectedTool("logo")}
+              className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                selectedTool === "logo"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-main"
+              }`}
+            >
+              Logo Replacement
+            </button>
+          </div>
+        )}
 
         {/* Tool Config Section */}
         {selectedTool === "blur" ? (
