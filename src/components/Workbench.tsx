@@ -94,6 +94,8 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   // Trial / Payment States
   const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
   const [trialUsed, setTrialUsed] = useState<boolean>(false);
+  const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -101,13 +103,25 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [imgDimensions, setImgDimensions] = useState<{ width: number; height: number } | null>(null);
 
-  const selectSample = (sample: typeof SAMPLE_IMAGES[0]) => {
+  const selectSample = async (sample: typeof SAMPLE_IMAGES[0]) => {
+    if (processedImage) {
+      window.URL.revokeObjectURL(processedImage);
+      setProcessedImage(null);
+    }
     setScanning(true);
     setScanProgress(0);
     setImage(sample.url);
-    setRawFile(null);
     setImageName(`${sample.name.toLowerCase().replace(/\s+/g, "-")}.jpg`);
     setDetectionError(null);
+
+    try {
+      const response = await fetch(sample.url);
+      const blob = await response.blob();
+      const file = new File([blob], `${sample.name.toLowerCase().replace(/\s+/g, "-")}.jpg`, { type: "image/jpeg" });
+      setRawFile(file);
+    } catch (err) {
+      console.error("Failed to load sample image file:", err);
+    }
     
     // Simulate smart detection scanning
     const interval = setInterval(() => {
@@ -238,6 +252,10 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   };
 
   const processFile = async (file: File) => {
+    if (processedImage) {
+      window.URL.revokeObjectURL(processedImage);
+      setProcessedImage(null);
+    }
     setScanning(true);
     setScanProgress(10);
     setImageName(file.name);
@@ -360,6 +378,63 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
     return () => window.removeEventListener("mouseup", handleMouseUp);
   }, [draggingIdx]);
 
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (processedImage) {
+        window.URL.revokeObjectURL(processedImage);
+      }
+    };
+  }, [processedImage]);
+
+  // Trigger high-res or preview processing automatically
+  const triggerAutoProcess = async () => {
+    if (!image || scanning || !rawFile) return;
+    setProcessing(true);
+    try {
+      const blob = await processImageRequest();
+      if (blob) {
+        setProcessedImage((prev) => {
+          if (prev) {
+            window.URL.revokeObjectURL(prev);
+          }
+          return window.URL.createObjectURL(blob);
+        });
+      }
+    } catch (err) {
+      console.error("Auto processing failed:", err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Debounced auto-processing trigger
+  useEffect(() => {
+    if (scanning || draggingIdx !== null || !image || !rawFile) return;
+
+    const delayDebounce = setTimeout(() => {
+      triggerAutoProcess();
+    }, 150);
+
+    return () => clearTimeout(delayDebounce);
+  }, [
+    keypoints,
+    selectedTool,
+    blurStyle,
+    blurIntensity,
+    solidColor,
+    selectedLogo,
+    logoScale,
+    logoRotate,
+    logoSkewX,
+    logoSkewY,
+    customLogoUrl,
+    image,
+    scanning,
+    draggingIdx,
+    rawFile
+  ]);
+
 
 
   // Request high-res perspective warped output from FastAPI
@@ -410,7 +485,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       return await response.blob();
     } catch (err) {
       console.error(err);
-      alert("Error processing the image. Please verify that the python backend is running.");
+      setDetectionError("Warping/Processing failed. Ensure that your python backend is running.");
       return null;
     }
   };
@@ -506,12 +581,20 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
             >
               <img
                 ref={imgRef}
-                src={image}
+                src={draggingIdx !== null ? image : (processedImage || image)}
                 onLoad={updateDimensions}
                 alt="Upload preview"
                 className="max-w-full max-h-[450px] rounded-2xl object-contain select-none"
                 draggable="false"
               />
+
+              {/* Processing Loader */}
+              {processing && (
+                <div className="absolute top-4 right-4 z-40 bg-black/75 backdrop-blur text-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-white/10">
+                  <RefreshCw size={12} className="animate-spin text-primary" />
+                  <span className="text-[10px] font-mono font-semibold tracking-wider uppercase">Processing...</span>
+                </div>
+              )}
 
               {/* AI Scanning Animation Overlay */}
               {scanning && (
