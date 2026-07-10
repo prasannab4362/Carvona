@@ -1,14 +1,49 @@
 "use client";
 
-import React, { useState, useRef, MouseEvent, TouchEvent } from "react";
+import React, { useState, useRef, useEffect, MouseEvent, TouchEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function BeforeAfterSlider() {
   const [sliderPos, setSliderPos] = useState(50);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto slide animation on mount to demo the comparison interactivity
+  useEffect(() => {
+    if (hasInteracted) return;
+
+    const delay = setTimeout(() => {
+      let step = 0;
+      const interval = setInterval(() => {
+        if (hasInteracted) {
+          clearInterval(interval);
+          return;
+        }
+
+        step += 1;
+        if (step <= 15) {
+          // Slide left to 35%
+          setSliderPos((prev) => prev - 1);
+        } else if (step <= 45) {
+          // Slide right to 65%
+          setSliderPos((prev) => prev + 1);
+        } else if (step <= 60) {
+          // Slide back to 50%
+          setSliderPos((prev) => prev - 1);
+        } else {
+          clearInterval(interval);
+        }
+      }, 25);
+
+      return () => clearInterval(interval);
+    }, 800);
+
+    return () => clearTimeout(delay);
+  }, [hasInteracted]);
 
   const handleMove = (clientX: number) => {
     if (!containerRef.current) return;
+    setHasInteracted(true);
     const rect = containerRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
