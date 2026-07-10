@@ -92,6 +92,7 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [imgDimensions, setImgDimensions] = useState<{ width: number; height: number } | null>(null);
 
   const selectSample = (sample: typeof SAMPLE_IMAGES[0]) => {
     setScanning(true);
@@ -122,6 +123,25 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  const updateDimensions = () => {
+    if (imgRef.current) {
+      setImgDimensions({
+        width: imgRef.current.clientWidth,
+        height: imgRef.current.clientHeight,
+      });
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
+
+  // Update dimensions whenever image URL or keypoints update to keep overlay in sync
+  useEffect(() => {
+    updateDimensions();
+  }, [image, keypoints]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -410,6 +430,7 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
               <img
                 ref={imgRef}
                 src={image}
+                onLoad={updateDimensions}
                 alt="Upload preview"
                 className="max-w-full max-h-[450px] rounded-2xl object-contain select-none"
                 draggable="false"
@@ -429,20 +450,20 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
               )}
 
               {/* Bounding Box SVG overlay with adjustable corner points (Only shows when loaded and not scanning) */}
-              {!scanning && imgRef.current && (
+              {!scanning && imgDimensions && (
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-20 flex items-center justify-center">
                   {/* SVG Container mapped directly over the image dimensions */}
                   <div 
                     className="relative pointer-events-auto"
                     style={{
-                      width: `${imgRef.current.clientWidth}px`,
-                      height: `${imgRef.current.clientHeight}px`,
+                      width: `${imgDimensions.width}px`,
+                      height: `${imgDimensions.height}px`,
                     }}
                   >
                     <svg className="absolute inset-0 w-full h-full pointer-events-none">
                       {/* Polygon displaying selection */}
                       <polygon
-                        points={keypoints.map((pt) => `${pt.x * imgRef.current!.clientWidth},${pt.y * imgRef.current!.clientHeight}`).join(" ")}
+                        points={keypoints.map((pt) => `${pt.x * imgDimensions.width},${pt.y * imgDimensions.height}`).join(" ")}
                         className="fill-primary/20 stroke-primary stroke-[3]"
                       />
                     </svg>
