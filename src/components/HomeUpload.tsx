@@ -101,7 +101,7 @@ export default function HomeUpload() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 px-2">
+    <div className="w-full max-w-md mx-auto flex flex-col bg-white rounded-[32px] border border-border-light shadow-[0_24px_64px_-16px_rgba(0,0,0,0.08)] p-6 md:p-8 transition-all duration-300">
       {/* Upload Box */}
       <div
         onDragEnter={handleDrag}
@@ -109,10 +109,10 @@ export default function HomeUpload() {
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center min-h-[350px] md:min-h-[420px] transition-all duration-300 cursor-pointer ${
+        className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all duration-300 cursor-pointer ${
           dragActive
             ? "border-primary bg-primary/[0.04] scale-[1.01]"
-            : "border-primary/30 hover:border-primary hover:bg-primary/[0.01]"
+            : "border-primary/25 hover:border-primary/60 bg-section/40 hover:bg-primary/[0.005]"
         }`}
       >
         <input
@@ -123,34 +123,36 @@ export default function HomeUpload() {
           className="hidden"
         />
 
-        <div className="flex flex-col items-center gap-5 text-center max-w-sm pointer-events-none select-none">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm transition-all duration-300 ${
-            dragActive ? "bg-primary text-white scale-110 rotate-12" : "bg-primary/10 text-primary hover:scale-105"
+        <div className="flex flex-col items-center gap-4 text-center pointer-events-none select-none">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-all duration-300 ${
+            dragActive ? "bg-primary text-white scale-110" : "bg-primary text-white scale-100 shadow-md"
           }`}>
-            <Upload size={28} className="stroke-[2.2]" />
+            <Upload size={22} className="stroke-[2.5]" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-text-main">
-              {dragActive ? "Drop to upload car!" : "Upload your vehicle photo"}
-            </h3>
-            <p className="text-sm text-text-muted mt-1.5 leading-relaxed">
-              {dragActive ? "Release your mouse to upload..." : "Drag and drop your car image here, or click to browse files from your device."}
+          <div className="flex flex-col items-center">
+            <span className="inline-flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/25 transition-all duration-200 cursor-pointer">
+              Upload Image
+            </span>
+            <p className="text-xs text-text-muted mt-3.5 font-semibold">
+              {dragActive ? "Drop here to upload!" : "or drop a file here"}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Samples selection */}
+      <div className="w-full h-[1px] bg-border-light my-6" />
+
+      {/* Samples selection inside the card */}
       <div className="flex flex-col gap-3">
-        <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
-          <ImageIcon size={14} /> Don&apos;t have a photo? Try these samples:
+        <span className="text-[11px] font-semibold text-text-muted flex items-center gap-1.5 justify-center uppercase tracking-wider">
+          No image? Try one of these:
         </span>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {SAMPLE_IMAGES.map((sample) => (
             <button
               key={sample.id}
               onClick={() => selectSample(sample)}
-              className="group relative h-24 rounded-2xl overflow-hidden border border-border-light hover:border-primary transition-all duration-300 flex items-end p-2 text-left"
+              className="group relative h-16 rounded-xl overflow-hidden border border-border-light hover:border-primary transition-all duration-300 flex items-end p-1.5 text-left"
             >
               <img
                 src={sample.url}
@@ -158,13 +160,18 @@ export default function HomeUpload() {
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <span className="relative z-10 text-xs font-semibold text-white truncate w-full">
+              <span className="relative z-10 text-[9px] font-bold text-white truncate w-full">
                 {sample.name}
               </span>
             </button>
           ))}
         </div>
       </div>
+      
+      <span className="text-[10px] text-text-muted text-center mt-5 leading-normal">
+        By uploading an image, you agree to our Terms of Service.
+      </span>
+    </div>
 
       {/* CHOOSE MODE MODAL OVERLAY */}
       {showModal && (
