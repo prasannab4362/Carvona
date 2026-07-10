@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Workbench from "@/components/Workbench";
+import HomeUpload from "@/components/HomeUpload";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import FAQ from "@/components/FAQ";
 import Link from "next/link";
@@ -43,7 +43,7 @@ export default function Home() {
 
           {/* Large Upload / Workbench Area */}
           <div className="w-full">
-            <Workbench />
+            <HomeUpload />
           </div>
         </div>
       </section>
