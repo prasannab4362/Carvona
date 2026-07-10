@@ -43,7 +43,7 @@ export default function BlurPage() {
 
           {/* Workbench focused on Blur */}
           <div className="w-full">
-            <Workbench defaultTool="blur" />
+            <Workbench defaultTool="blur" hideTabs={true} />
           </div>
         </div>
       </main>
