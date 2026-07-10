@@ -493,9 +493,17 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
 
         {/* Sample Selection */}
         <div className="flex flex-col gap-3">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
-            <ImageIcon size={14} /> Don&apos;t have a photo? Try these samples:
-          </span>
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <ImageIcon size={14} /> Try samples or upload yours:
+            </span>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-xl shadow hover:bg-primary-hover transition-all duration-200"
+            >
+              <Upload size={12} className="stroke-[2.5]" /> Upload Car Image
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-4">
             {SAMPLE_IMAGES.map((sample) => (
               <button
@@ -762,18 +770,27 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
         {/* Global Action Buttons */}
         <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-border-light">
           {image && (
-            <button
-              onClick={() => {
-                setImage(null);
-                setRawFile(null);
-                setCustomLogoFile(null);
-                setCustomLogoUrl(null);
-                setDetectionError(null);
-              }}
-              className="w-full py-2.5 bg-transparent border border-border-light hover:bg-section text-text-main text-xs font-semibold rounded-xl transition-all duration-200"
-            >
-              Clear Image
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-2.5 bg-transparent border border-border-light hover:bg-section text-text-main text-xs font-semibold rounded-xl transition-all duration-200"
+              >
+                Upload New
+              </button>
+              <button
+                onClick={() => {
+                  setImage(null);
+                  setRawFile(null);
+                  setCustomLogoFile(null);
+                  setCustomLogoUrl(null);
+                  setDetectionError(null);
+                  setImgDimensions(null);
+                }}
+                className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-xl transition-all duration-200"
+              >
+                Clear Image
+              </button>
+            </div>
           )}
 
           <button
