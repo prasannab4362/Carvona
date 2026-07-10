@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Image as ImageIcon, EyeOff, Award, ArrowRight, X } from "lucide-react";
+import { Upload, EyeOff, Award, ArrowRight, X } from "lucide-react";
 
 const SAMPLE_IMAGES = [
   {
@@ -101,77 +101,78 @@ export default function HomeUpload() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col bg-white rounded-[32px] border border-border-light shadow-[0_24px_64px_-16px_rgba(0,0,0,0.08)] p-6 md:p-8 transition-all duration-300">
-      {/* Upload Box */}
-      <div
-        onDragEnter={handleDrag}
-        onDragOver={handleDrag}
-        onDragLeave={handleDrag}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all duration-300 cursor-pointer ${
-          dragActive
-            ? "border-primary bg-primary/[0.04] scale-[1.01]"
-            : "border-primary/25 hover:border-primary/60 bg-section/40 hover:bg-primary/[0.005]"
-        }`}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          className="hidden"
-        />
+    <>
+      <div className="w-full max-w-md mx-auto flex flex-col bg-white rounded-[32px] border border-border-light shadow-[0_24px_64px_-16px_rgba(0,0,0,0.08)] p-6 md:p-8 transition-all duration-300">
+        {/* Upload Box */}
+        <div
+          onDragEnter={handleDrag}
+          onDragOver={handleDrag}
+          onDragLeave={handleDrag}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all duration-300 cursor-pointer ${
+            dragActive
+              ? "border-primary bg-primary/[0.04] scale-[1.01]"
+              : "border-primary/25 hover:border-primary/60 bg-section/40 hover:bg-primary/[0.005]"
+          }`}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+          />
 
-        <div className="flex flex-col items-center gap-4 text-center pointer-events-none select-none">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-all duration-300 ${
-            dragActive ? "bg-primary text-white scale-110" : "bg-primary text-white scale-100 shadow-md"
-          }`}>
-            <Upload size={22} className="stroke-[2.5]" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="inline-flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/25 transition-all duration-200 cursor-pointer">
-              Upload Image
-            </span>
-            <p className="text-xs text-text-muted mt-3.5 font-semibold">
-              {dragActive ? "Drop here to upload!" : "or drop a file here"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full h-[1px] bg-border-light my-6" />
-
-      {/* Samples selection inside the card */}
-      <div className="flex flex-col gap-3">
-        <span className="text-[11px] font-semibold text-text-muted flex items-center gap-1.5 justify-center uppercase tracking-wider">
-          No image? Try one of these:
-        </span>
-        <div className="grid grid-cols-3 gap-3">
-          {SAMPLE_IMAGES.map((sample) => (
-            <button
-              key={sample.id}
-              onClick={() => selectSample(sample)}
-              className="group relative h-16 rounded-xl overflow-hidden border border-border-light hover:border-primary transition-all duration-300 flex items-end p-1.5 text-left"
-            >
-              <img
-                src={sample.url}
-                alt={sample.name}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <span className="relative z-10 text-[9px] font-bold text-white truncate w-full">
-                {sample.name}
+          <div className="flex flex-col items-center gap-4 text-center pointer-events-none select-none">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-all duration-300 ${
+              dragActive ? "bg-primary text-white scale-110" : "bg-primary text-white scale-100 shadow-md"
+            }`}>
+              <Upload size={22} className="stroke-[2.5]" />
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="inline-flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/25 transition-all duration-200 cursor-pointer">
+                Upload Image
               </span>
-            </button>
-          ))}
+              <p className="text-xs text-text-muted mt-3.5 font-semibold">
+                {dragActive ? "Drop here to upload!" : "or drop a file here"}
+              </p>
+            </div>
+          </div>
         </div>
+
+        <div className="w-full h-[1px] bg-border-light my-6" />
+
+        {/* Samples selection inside the card */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[11px] font-semibold text-text-muted flex items-center gap-1.5 justify-center uppercase tracking-wider">
+            No image? Try one of these:
+          </span>
+          <div className="grid grid-cols-3 gap-3">
+            {SAMPLE_IMAGES.map((sample) => (
+              <button
+                key={sample.id}
+                onClick={() => selectSample(sample)}
+                className="group relative h-16 rounded-xl overflow-hidden border border-border-light hover:border-primary transition-all duration-300 flex items-end p-1.5 text-left"
+              >
+                <img
+                  src={sample.url}
+                  alt={sample.name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <span className="relative z-10 text-[9px] font-bold text-white truncate w-full">
+                  {sample.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <span className="text-[10px] text-text-muted text-center mt-5 leading-normal">
+          By uploading an image, you agree to our Terms of Service.
+        </span>
       </div>
-      
-      <span className="text-[10px] text-text-muted text-center mt-5 leading-normal">
-        By uploading an image, you agree to our Terms of Service.
-      </span>
-    </div>
 
       {/* CHOOSE MODE MODAL OVERLAY */}
       {showModal && (
@@ -248,6 +249,6 @@ export default function HomeUpload() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
