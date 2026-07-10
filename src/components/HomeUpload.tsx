@@ -123,14 +123,18 @@ export default function HomeUpload() {
           className="hidden"
         />
 
-        <div className="flex flex-col items-center gap-5 text-center max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm hover:scale-105 transition-transform duration-300">
+        <div className="flex flex-col items-center gap-5 text-center max-w-sm pointer-events-none select-none">
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm transition-all duration-300 ${
+            dragActive ? "bg-primary text-white scale-110 rotate-12" : "bg-primary/10 text-primary hover:scale-105"
+          }`}>
             <Upload size={28} className="stroke-[2.2]" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-text-main">Upload your vehicle photo</h3>
+            <h3 className="text-xl font-bold text-text-main">
+              {dragActive ? "Drop to upload car!" : "Upload your vehicle photo"}
+            </h3>
             <p className="text-sm text-text-muted mt-1.5 leading-relaxed">
-              Drag and drop your car image here, or click to browse files from your device.
+              {dragActive ? "Release your mouse to upload..." : "Drag and drop your car image here, or click to browse files from your device."}
             </p>
           </div>
         </div>
