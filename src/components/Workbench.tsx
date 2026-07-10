@@ -145,7 +145,9 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       if (pendingType === "sample" && pendingSampleId) {
         const sample = SAMPLE_IMAGES.find((s) => s.id === pendingSampleId);
         if (sample) {
-          selectSample(sample);
+          setTimeout(() => {
+            selectSample(sample);
+          }, 0);
           return;
         }
       }
