@@ -20,7 +20,18 @@ export default function Footer() {
           <p className="text-sm text-text-muted max-w-sm">
             AI-powered automotive image processing. Blur license plates for free or brand them with your custom dealership logo instantly.
           </p>
-          <p className="text-xs text-text-muted mt-2">
+          <p className="text-xs text-text-muted mt-2 font-semibold">
+            Powered by{" "}
+            <a
+              href="https://gasai.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline transition-all"
+            >
+              Green Automation Solutions (GAS AI)
+            </a>
+          </p>
+          <p className="text-[10px] text-text-muted/70 mt-1">
             © {currentYear} CARVONA AI. All rights reserved.
           </p>
         </div>
