@@ -172,85 +172,122 @@ async def process_plate(
                 logo_img = cv2.imdecode(logo_nparr, cv2.IMREAD_UNCHANGED)
             
             if logo_img is None:
-                # Generate a high-quality stylized brand logo dynamically on canvas
-                # We can draw it as a numpy array
-                logo_w, logo_h = 1200, 400
-                logo_img = np.zeros((logo_h, logo_w, 4), dtype=np.uint8)
+                # Try to load the high-resolution frame image template
+                frame_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "carvona_plate_frame.png")
+                frame_img = cv2.imread(frame_path, cv2.IMREAD_UNCHANGED)
                 
-                # Set background color
-                bg_color = (74, 163, 22, 255) if logo_brand == "carvona" else (55, 41, 31, 255) # BGR(A)
-                logo_img[:, :] = bg_color
-                
-                text = "CARVONA" if logo_brand == "carvona" else "PREMIUM MOTORS"
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                
-                if logo_brand == "carvona":
-                    # Draw Stylized Circular Car Logo Icon + CARVONA Text next to each other
-                    font_scale = 3.0
-                    thickness = 8
+                if frame_img is not None:
+                    # Frame is loaded successfully
+                    if frame_img.shape[2] == 3:
+                        frame_img = cv2.cvtColor(frame_img, cv2.COLOR_BGR2BGRA)
                     
-                    # Get text size
-                    (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                    logo_img = frame_img.copy()
+                    logo_h, logo_w, _ = logo_img.shape
                     
-                    # Total width of: icon (diameter 220) + spacing (60) + text_w
-                    total_w = 220 + 60 + text_w
-                    start_x = (logo_w - total_w) // 2
+                    font = cv2.FONT_HERSHEY_SIMPLEX
                     
-                    icon_x = start_x + 110 # Center of circle
-                    icon_y = 200
-                    
-                    # 1. Draw outer circle ring (white)
-                    cv2.circle(logo_img, (icon_x, icon_y), 100, (255, 255, 255, 255), 8, cv2.LINE_AA)
-                    cv2.circle(logo_img, (icon_x, icon_y), 88, (255, 255, 255, 80), 2, cv2.LINE_AA)
-                    
-                    # 2. Draw car front outline inside circle
-                    # Roof/Windshield
-                    windshield_pts = np.array([
-                        [icon_x - 35, icon_y - 8],
-                        [icon_x + 35, icon_y - 8],
-                        [icon_x + 22, icon_y - 32],
-                        [icon_x - 22, icon_y - 32]
-                    ], dtype=np.int32)
-                    cv2.polylines(logo_img, [windshield_pts], True, (255, 255, 255, 255), 4, cv2.LINE_AA)
-                    
-                    # Hood line
-                    cv2.line(logo_img, (icon_x - 50, icon_y - 8), (icon_x + 50, icon_y - 8), (255, 255, 255, 255), 4, cv2.LINE_AA)
-                    
-                    # Side contour
-                    cv2.line(logo_img, (icon_x - 50, icon_y - 8), (icon_x - 54, icon_y + 20), (255, 255, 255, 255), 4, cv2.LINE_AA)
-                    cv2.line(logo_img, (icon_x + 50, icon_y - 8), (icon_x + 54, icon_y + 20), (255, 255, 255, 255), 4, cv2.LINE_AA)
-                    
-                    # Grille outline
-                    cv2.rectangle(logo_img, (icon_x - 30, icon_y + 8), (icon_x + 30, icon_y + 30), (255, 255, 255, 255), 3, cv2.LINE_AA)
-                    # Grille vertical bars
-                    for gr_x in range(icon_x - 18, icon_x + 25, 12):
-                        cv2.line(logo_img, (gr_x, icon_y + 8), (gr_x, icon_y + 30), (255, 255, 255, 255), 2, cv2.LINE_AA)
-                    
-                    # Headlights
-                    cv2.circle(logo_img, (icon_x - 44, icon_y + 12), 8, (255, 255, 255, 255), -1, cv2.LINE_AA)
-                    cv2.circle(logo_img, (icon_x + 44, icon_y + 12), 8, (255, 255, 255, 255), -1, cv2.LINE_AA)
-                    
-                    # Bumper bar
-                    cv2.line(logo_img, (icon_x - 58, icon_y + 36), (icon_x + 58, icon_y + 36), (255, 255, 255, 255), 6, cv2.LINE_AA)
-                    
-                    # 3. Draw text next to the icon
-                    text_x = start_x + 220 + 60
-                    text_y = (logo_h + text_h) // 2
-                    
-                    # Draw shadow
-                    cv2.putText(logo_img, text, (text_x+4, text_y+4), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
-                    # Draw white text
-                    cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
+                    if logo_brand == "carvona":
+                        text = "CARVONA"
+                        font_scale = 1.8
+                        thickness = 6
+                        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                        
+                        # Total width: icon (130) + spacing (30) + text_w
+                        total_w = 130 + 30 + text_w
+                        start_x = 30 + (957 - total_w) // 2
+                        
+                        icon_x = start_x + 65
+                        icon_y = 195
+                        
+                        color_green = (22, 163, 74, 255) # Green (BGR)
+                        cv2.circle(logo_img, (icon_x, icon_y), 60, color_green, 5, cv2.LINE_AA)
+                        cv2.circle(logo_img, (icon_x, icon_y), 52, (22, 163, 74, 80), 2, cv2.LINE_AA)
+                        
+                        # Draw car front outline
+                        windshield_pts = np.array([
+                            [icon_x - 20, icon_y - 4],
+                            [icon_x + 20, icon_y - 4],
+                            [icon_x + 12, icon_y - 18],
+                            [icon_x - 12, icon_y - 18]
+                        ], dtype=np.int32)
+                        cv2.polylines(logo_img, [windshield_pts], True, color_green, 3, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x - 28, icon_y - 4), (icon_x + 28, icon_y - 4), color_green, 3, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x - 28, icon_y - 4), (icon_x - 30, icon_y + 12), color_green, 3, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x + 28, icon_y - 4), (icon_x + 30, icon_y + 12), color_green, 3, cv2.LINE_AA)
+                        cv2.rectangle(logo_img, (icon_x - 16, icon_y + 5), (icon_x + 16, icon_y + 18), color_green, 2, cv2.LINE_AA)
+                        for gr_x in range(icon_x - 10, icon_x + 15, 8):
+                            cv2.line(logo_img, (gr_x, icon_y + 5), (gr_x, icon_y + 18), color_green, 1, cv2.LINE_AA)
+                        cv2.circle(logo_img, (icon_x - 23, icon_y + 7), 5, color_green, -1, cv2.LINE_AA)
+                        cv2.circle(logo_img, (icon_x + 23, icon_y + 7), 5, color_green, -1, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x - 33, icon_y + 22), (icon_x + 33, icon_y + 22), color_green, 4, cv2.LINE_AA)
+                        
+                        text_x = start_x + 130 + 30
+                        text_y = (logo_h + text_h) // 2
+                        cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, color_green, thickness, cv2.LINE_AA)
+                    else:
+                        # Draw "PREMIUM MOTORS" in white area for other brands
+                        text = "PREMIUM MOTORS"
+                        font_scale = 1.8
+                        thickness = 6
+                        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                        text_x = 30 + (957 - text_w) // 2
+                        text_y = (logo_h + text_h) // 2
+                        color_dark = (31, 41, 55, 255) # Dark BGR(A) charcoal
+                        cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, color_dark, thickness, cv2.LINE_AA)
                 else:
-                    # Default centered text for non-carvona default logos
-                    font_scale = 3.2
-                    thickness = 8
-                    (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
-                    text_x = (logo_w - text_w) // 2
-                    text_y = (logo_h + text_h) // 2
+                    # Fallback dynamically generated canvas (identical to previous behavior)
+                    logo_w, logo_h = 1200, 400
+                    logo_img = np.zeros((logo_h, logo_w, 4), dtype=np.uint8)
                     
-                    cv2.putText(logo_img, text, (text_x+4, text_y+4), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
-                    cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
+                    bg_color = (74, 163, 22, 255) if logo_brand == "carvona" else (55, 41, 31, 255)
+                    logo_img[:, :] = bg_color
+                    
+                    text = "CARVONA" if logo_brand == "carvona" else "PREMIUM MOTORS"
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    
+                    if logo_brand == "carvona":
+                        font_scale = 3.0
+                        thickness = 8
+                        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                        
+                        total_w = 220 + 60 + text_w
+                        start_x = (logo_w - total_w) // 2
+                        
+                        icon_x = start_x + 110
+                        icon_y = 200
+                        
+                        cv2.circle(logo_img, (icon_x, icon_y), 100, (255, 255, 255, 255), 8, cv2.LINE_AA)
+                        cv2.circle(logo_img, (icon_x, icon_y), 88, (255, 255, 255, 80), 2, cv2.LINE_AA)
+                        
+                        windshield_pts = np.array([
+                            [icon_x - 35, icon_y - 8],
+                            [icon_x + 35, icon_y - 8],
+                            [icon_x + 22, icon_y - 32],
+                            [icon_x - 22, icon_y - 32]
+                        ], dtype=np.int32)
+                        cv2.polylines(logo_img, [windshield_pts], True, (255, 255, 255, 255), 4, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x - 50, icon_y - 8), (icon_x + 50, icon_y - 8), (255, 255, 255, 255), 4, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x - 50, icon_y - 8), (icon_x - 54, icon_y + 20), (255, 255, 255, 255), 4, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x + 50, icon_y - 8), (icon_x + 54, icon_y + 20), (255, 255, 255, 255), 4, cv2.LINE_AA)
+                        cv2.rectangle(logo_img, (icon_x - 30, icon_y + 8), (icon_x + 30, icon_y + 30), (255, 255, 255, 255), 3, cv2.LINE_AA)
+                        for gr_x in range(icon_x - 18, icon_x + 25, 12):
+                            cv2.line(logo_img, (gr_x, icon_y + 8), (gr_x, icon_y + 30), (255, 255, 255, 255), 2, cv2.LINE_AA)
+                        cv2.circle(logo_img, (icon_x - 44, icon_y + 12), 8, (255, 255, 255, 255), -1, cv2.LINE_AA)
+                        cv2.circle(logo_img, (icon_x + 44, icon_y + 12), 8, (255, 255, 255, 255), -1, cv2.LINE_AA)
+                        cv2.line(logo_img, (icon_x - 58, icon_y + 36), (icon_x + 58, icon_y + 36), (255, 255, 255, 255), 6, cv2.LINE_AA)
+                        
+                        text_x = start_x + 220 + 60
+                        text_y = (logo_h + text_h) // 2
+                        cv2.putText(logo_img, text, (text_x+4, text_y+4), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
+                        cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
+                    else:
+                        font_scale = 3.2
+                        thickness = 8
+                        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                        text_x = (logo_w - text_w) // 2
+                        text_y = (logo_h + text_h) // 2
+                        cv2.putText(logo_img, text, (text_x+4, text_y+4), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
+                        cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
 
             # Ensure logo has alpha channel
             if logo_img.shape[2] == 3:

@@ -102,7 +102,7 @@ export default function BeforeAfterSlider() {
             draggable="false"
           />
           {/* Plate Mockup (Original) */}
-          <div className="absolute top-[67.7%] left-[41.6%] w-[18.2%] h-[3.8%] bg-white border border-gray-400 rounded flex items-center justify-center text-[10px] md:text-sm font-bold text-gray-800 tracking-wider shadow shadow-black/20">
+          <div className="absolute top-[77.0%] left-[41.9%] w-[17.9%] h-[6.7%] bg-white border border-gray-400 rounded flex items-center justify-center text-[10px] md:text-sm font-bold text-gray-800 tracking-wider shadow shadow-black/20">
             HR 26 AA 5678
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function BeforeAfterSlider() {
             draggable="false"
           />
           {/* Plate Mockup (Blurred / Replaced with Logo) */}
-          <div className="absolute top-[67.7%] left-[41.6%] w-[18.2%] h-[3.8%] bg-[#4aa316] rounded flex items-center justify-center shadow shadow-primary/20">
+          <div className="absolute top-[77.0%] left-[41.9%] w-[17.9%] h-[6.7%] bg-[#4aa316] rounded flex items-center justify-center shadow shadow-primary/20">
             <span className="text-[8px] md:text-xs font-mono font-bold text-white tracking-widest flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full border border-white/50 flex items-center justify-center text-[5px]">o</span> CARVONA
             </span>

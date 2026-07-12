@@ -37,6 +37,7 @@ image = (
     )
     .run_function(download_weights)
     .add_local_file(os.path.join(backend_dir, "main.py"), remote_path="/root/main.py")
+    .add_local_file(os.path.join(backend_dir, "carvona_plate_frame.png"), remote_path="/root/carvona_plate_frame.png")
 )
 
 # 3. Serve the FastAPI app as an ASGI application
