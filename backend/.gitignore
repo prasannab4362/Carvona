@@ -1,0 +1,12 @@
+# python venv
+venv/
+.venv/
+env/
+.env
+
+# cache
+__pycache__/
+*.pyc
+
+# weights
+*.pt
