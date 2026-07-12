@@ -81,7 +81,7 @@ export default function Navbar() {
             href="/blur"
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/25 hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200"
           >
-            Start Free
+            Try Editor
             <ArrowRight size={14} className="stroke-[2.5]" />
           </Link>
         </div>
@@ -121,7 +121,7 @@ export default function Navbar() {
             onClick={handleLinkClick}
             className="w-full inline-flex items-center justify-center gap-2 py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all duration-200"
           >
-            Start Free
+            Try Editor
             <ArrowRight size={16} />
           </Link>
         </div>
