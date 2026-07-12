@@ -512,12 +512,6 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   const handleDownload = async () => {
     if (!image) return;
 
-    if (selectedTool === "logo" && trialUsed) {
-      // Trigger checkout modal
-      setIsPaymentOpen(true);
-      return;
-    }
-
     // Process and download
     const blob = await processImageRequest();
     if (!blob) return;
@@ -530,13 +524,6 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
-    // Consume free trial if logo replace was selected
-    if (selectedTool === "logo" && !trialUsed) {
-      localStorage.setItem("carvona_trial_used", "true");
-      setTrialUsed(true);
-      alert("🎉 Your free trial logo replacement has been downloaded!");
-    }
   };
 
   const handlePaymentSuccess = async () => {
@@ -1060,18 +1047,16 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
               </div>
             </div>
 
-            {/* Trial Status Badge */}
-            <div className="text-[11px] text-text-muted leading-relaxed flex items-start gap-1.5 bg-section p-3 rounded-xl border border-border-light">
+            {/* Free Status Badge */}
+            <div className="text-[11px] text-text-muted leading-relaxed flex items-start gap-1.5 bg-section p-3 rounded-xl border border-border-light mt-4">
               <Info size={14} className="text-primary shrink-0 mt-0.5" />
               <span>
-                {trialUsed
-                  ? "Trial used. Download costs ₹2 per processed image (Stripe simulation)."
-                  : "First download is FREE (trial). Subsequent images cost ₹2."}
+                License plate blurring and logo replacements are 100% free and unlimited.
               </span>
             </div>
           </div>
         )}
-
+ 
         {/* Global Action Buttons */}
         <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-border-light">
           {image && (
@@ -1097,14 +1082,14 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
               </button>
             </div>
           )}
-
+ 
           <button
             onClick={handleDownload}
             disabled={!image || scanning}
             className="w-full py-3 bg-primary hover:bg-primary-hover disabled:bg-primary/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-200"
           >
             <Download size={16} />
-            {selectedTool === "logo" && trialUsed ? "Unlock & Download (₹2)" : "Download Image"}
+            Download Image
           </button>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { Award, Zap, Layers } from "lucide-react";
 
 export const metadata = {
   title: "License Plate Logo Replacement - Dealership Branding | Carvona",
-  description: "Brand your vehicle inventory with custom logos. High-quality perspective-corrected logo placement for ₹2/image. First download free.",
+  description: "Brand your vehicle inventory with custom logos. High-quality perspective-corrected logo placement. 100% free and unlimited, no registration required.",
 };
 
 export default function LogoReplacePage() {

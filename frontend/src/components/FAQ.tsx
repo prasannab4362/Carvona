@@ -61,7 +61,7 @@ export default function FAQ() {
     {
       question: "What is the difference between Plate Blur and Logo Replacement?",
       answer:
-        "License Plate Blur is 100% free and unlimited, blurring plates to protect privacy. Logo Replacement allows dealerships to replace plates with their custom branding logo. Logo Replacement costs ₹2 per image, with the first download free.",
+        "License Plate Blur blurs plates to protect privacy. Logo Replacement allows dealerships to replace plates with their custom branding logo. Both tools are 100% free and unlimited.",
     },
     {
       question: "Can I upload my own dealership logo?",
@@ -69,9 +69,9 @@ export default function FAQ() {
         "Yes! You can upload custom PNG, JPEG, or SVG logo images. The workbench provides fine-tuning controls to adjust the scale, perspective, and alignment of the logo on the plate for a professional finish.",
     },
     {
-      question: "How does the pricing and trial work?",
+      question: "Is there any cost or limit to use Carvona?",
       answer:
-        "The first logo replacement image is free to download as a trial. Subsequent logo replacements cost ₹2 per image. There are no subscriptions, registration walls, or hidden fees. You only pay for what you download.",
+        "No, Carvona is completely free to use. Both license plate blurring and logo branding replacements are unlimited, and you do not need to register an account or pay anything.",
     },
   ];
 

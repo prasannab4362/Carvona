@@ -62,14 +62,14 @@ export default function Footer() {
           </h4>
           <ul className="flex flex-col gap-2 text-sm text-text-muted">
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link href="/privacy" className="hover:text-primary transition-colors">
                 Privacy Policy
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link href="/terms" className="hover:text-primary transition-colors">
                 Terms of Service
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

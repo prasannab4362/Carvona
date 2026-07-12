@@ -196,12 +196,12 @@ export default function Home() {
       {/* Pricing Section */}
       <section className="py-24 bg-white" id="pricing">
         <div className="max-w-7xl mx-auto px-6 md:px-10 flex flex-col gap-16">
-          <div className="text-center max-w-2xl mx-auto flex flex-col gap-4">
+          <div className="text-center max-w-2xl mx-auto flex flex-col gap-4 mb-16">
             <h2 className="text-3xl font-extrabold tracking-tight text-text-main">
-              Simple, Transparent Pricing
+              100% Free & Unlimited
             </h2>
             <p className="text-text-muted text-sm md:text-base">
-              No subscription contracts. No hidden fees. Pay only for what you download.
+              No subscription contracts. No credit card required. Use all features completely free.
             </p>
           </div>
 
@@ -209,7 +209,7 @@ export default function Home() {
             {/* Free Tier */}
             <div className="bg-white rounded-3xl border border-border-light p-8 flex flex-col justify-between shadow-sm">
               <div>
-                <h3 className="text-xl font-bold text-text-main">Free Tier</h3>
+                <h3 className="text-xl font-bold text-text-main">Plate Blurring</h3>
                 <p className="text-sm text-text-muted mt-2">Essential privacy protection</p>
                 <div className="mt-6 flex items-baseline gap-1">
                   <span className="text-4xl font-extrabold text-text-main">₹0</span>
@@ -239,15 +239,15 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Pro Tier */}
+            {/* Logo Replacement Tier */}
             <div className="bg-primary rounded-3xl p-8 flex flex-col justify-between text-white shadow-xl shadow-primary/10 relative overflow-hidden">
               <div className="absolute -right-12 -top-12 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
               <div>
-                <h3 className="text-xl font-bold">Pro Tier</h3>
-                <p className="text-sm text-white/80 mt-2">Branding and dealership listing design</p>
+                <h3 className="text-xl font-bold">Logo Branding</h3>
+                <p className="text-sm text-white/80 mt-2">Dealership listing design and branding</p>
                 <div className="mt-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold">₹2</span>
-                  <span className="text-sm text-white/80">/ processed image</span>
+                  <span className="text-4xl font-extrabold">₹0</span>
+                  <span className="text-sm text-white/80">/ forever</span>
                 </div>
 
                 <ul className="mt-8 flex flex-col gap-4 text-sm text-white/90">
@@ -265,7 +265,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-secondary shrink-0" />
-                    <span>One free trial replacement per browser</span>
+                    <span>Unlimited replacement downloads</span>
                   </li>
                 </ul>
               </div>
