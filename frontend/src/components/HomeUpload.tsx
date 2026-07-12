@@ -6,19 +6,19 @@ import { Upload, EyeOff, Award, ArrowRight, X } from "lucide-react";
 
 const SAMPLE_IMAGES = [
   {
-    id: "sports",
-    name: "Sports Coupe",
-    url: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1000&q=80",
+    id: "hatchback",
+    name: "Indian Hatchback",
+    url: "/sample-hatchback.png",
   },
   {
     id: "suv",
-    name: "Luxury SUV",
-    url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80",
+    name: "Indian SUV",
+    url: "/sample-suv.png",
   },
   {
     id: "sedan",
-    name: "Electric Sedan",
-    url: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80",
+    name: "Indian Sedan",
+    url: "/sample-sedan.png",
   },
 ];
 

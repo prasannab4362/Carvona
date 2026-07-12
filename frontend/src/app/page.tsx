@@ -100,8 +100,8 @@ export default function Home() {
 
             {/* Card 2 */}
             <div className="bg-white rounded-3xl border border-border-light p-8 flex flex-col justify-between hover:shadow-xl hover:border-primary/30 transition-all duration-300 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-amber-500 text-amber-950 text-[10px] font-mono font-bold px-4 py-1 rounded-bl-2xl">
-                PREMIUM
+              <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-mono font-bold px-4 py-1 rounded-bl-2xl">
+                BETA
               </div>
               <div className="flex flex-col gap-6">
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
@@ -115,8 +115,8 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex justify-between items-center mt-8 pt-6 border-t border-border-light">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 bg-amber-500/10 text-amber-600 rounded-full border border-amber-500/20">
-                  ₹2 per image
+                <span className="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 bg-section rounded-full text-text-main border border-border-light">
+                  FREE FOR NOW
                 </span>
                 <Link href="/logo-replace" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
                   Try Logo Replacement →
