@@ -7,36 +7,36 @@ import PaymentModal from "./PaymentModal";
 // Pre-defined sample images with high quality and pre-configured plate coordinates
 const SAMPLE_IMAGES = [
   {
-    id: "sports",
-    name: "Sports Coupe",
-    url: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1000&q=80",
+    id: "hatchback",
+    name: "Indian Hatchback",
+    url: "/sample-hatchback.png",
     keypoints: [
-      { x: 0.455, y: 0.672 },
-      { x: 0.567, y: 0.672 },
-      { x: 0.567, y: 0.727 },
-      { x: 0.455, y: 0.727 },
+      { x: 0.4119, y: 0.6629 },
+      { x: 0.6007, y: 0.6607 },
+      { x: 0.5998, y: 0.7018 },
+      { x: 0.4105, y: 0.7053 },
     ],
   },
   {
     id: "suv",
-    name: "Luxury SUV",
-    url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80",
+    name: "Indian SUV",
+    url: "/sample-suv.png",
     keypoints: [
-      { x: 0.445, y: 0.795 },
-      { x: 0.565, y: 0.795 },
-      { x: 0.565, y: 0.847 },
-      { x: 0.445, y: 0.847 },
+      { x: 0.4164, y: 0.6777 },
+      { x: 0.5982, y: 0.6766 },
+      { x: 0.5979, y: 0.7139 },
+      { x: 0.4155, y: 0.7166 },
     ],
   },
   {
     id: "sedan",
-    name: "Electric Sedan",
-    url: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80",
+    name: "Indian Sedan",
+    url: "/sample-sedan.png",
     keypoints: [
-      { x: 0.442, y: 0.738 },
-      { x: 0.567, y: 0.738 },
-      { x: 0.567, y: 0.796 },
-      { x: 0.442, y: 0.796 },
+      { x: 0.412, y: 0.657 },
+      { x: 0.5983, y: 0.6553 },
+      { x: 0.5986, y: 0.6949 },
+      { x: 0.4117, y: 0.6979 },
     ],
   },
 ];
@@ -96,6 +96,9 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   const [trialUsed, setTrialUsed] = useState<boolean>(false);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
+  const [showComparison, setShowComparison] = useState<boolean>(false);
+  const [sliderPos, setSliderPos] = useState<number>(50);
+  const [isDraggingSlider, setIsDraggingSlider] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -108,6 +111,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       window.URL.revokeObjectURL(processedImage);
       setProcessedImage(null);
     }
+    setShowComparison(false);
     setScanning(true);
     setScanProgress(0);
     setImage(sample.url);
@@ -256,6 +260,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       window.URL.revokeObjectURL(processedImage);
       setProcessedImage(null);
     }
+    setShowComparison(false);
     setScanning(true);
     setScanProgress(10);
     setImageName(file.name);
@@ -549,6 +554,47 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
     window.URL.revokeObjectURL(url);
   };
 
+  // Handle Before/After slider dragging
+  useEffect(() => {
+    if (!isDraggingSlider) return;
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      if (!imgRef.current) return;
+      const rect = imgRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pos = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      setSliderPos(pos);
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingSlider(false);
+    };
+
+    const handleTouchMove = (e: globalThis.TouchEvent) => {
+      if (!imgRef.current || e.touches.length === 0) return;
+      const rect = imgRef.current.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const pos = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      setSliderPos(pos);
+    };
+
+    const handleTouchEnd = () => {
+      setIsDraggingSlider(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isDraggingSlider]);
+
   return (
     <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start px-2">
       {/* LEFT: Upload area / Image preview (8 cols on desktop) */}
@@ -593,14 +639,86 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
               onMouseMove={handleContainerMouseMove}
               className="relative w-full h-full flex items-center justify-center overflow-hidden max-h-[500px]"
             >
-              <img
-                ref={imgRef}
-                src={draggingIdx !== null ? image : (processedImage || image)}
-                onLoad={updateDimensions}
-                alt="Upload preview"
-                className="max-w-full max-h-[450px] rounded-2xl object-contain select-none"
-                draggable="false"
-              />
+              {/* Compare toggle tabs */}
+              {processedImage && !scanning && (
+                <div className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur border border-border-light rounded-xl p-0.5 flex gap-1 shadow-md">
+                  <button
+                    type="button"
+                    onClick={() => setShowComparison(false)}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                      !showComparison
+                        ? "bg-primary text-white"
+                        : "text-text-muted hover:text-text-main"
+                    }`}
+                  >
+                    Edit corners
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowComparison(true)}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                      showComparison
+                        ? "bg-primary text-white"
+                        : "text-text-muted hover:text-text-main"
+                    }`}
+                  >
+                    Compare Before/After
+                  </button>
+                </div>
+              )}
+
+              {showComparison && processedImage && imgDimensions ? (
+                <div
+                  className="relative select-none flex items-center justify-center"
+                  style={{ width: `${imgDimensions.width}px`, height: `${imgDimensions.height}px` }}
+                >
+                  {/* BEFORE: Original Image */}
+                  <img
+                    src={image}
+                    alt="Original"
+                    className="w-full h-full rounded-2xl object-contain select-none pointer-events-none"
+                    draggable="false"
+                  />
+                  {/* AFTER: Processed Image with clip path */}
+                  <img
+                    ref={imgRef}
+                    src={processedImage}
+                    alt="Processed"
+                    className="absolute inset-0 w-full h-full rounded-2xl object-contain select-none pointer-events-none"
+                    style={{
+                      clipPath: `polygon(0 0, ${sliderPos}% 0, ${sliderPos}% 100%, 0 100%)`
+                    }}
+                    draggable="false"
+                  />
+                  {/* Divider line & handle */}
+                  <div
+                    className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize shadow-[0_0_10px_rgba(0,0,0,0.5)] z-20 flex items-center justify-center"
+                    style={{ left: `${sliderPos}%` }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsDraggingSlider(true);
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                      setIsDraggingSlider(true);
+                    }}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-white border border-border-light shadow-md flex items-center justify-center text-primary font-bold text-xs pointer-events-none hover:scale-110 transition-transform">
+                      ↔
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  ref={imgRef}
+                  src={draggingIdx !== null ? image : (processedImage || image)}
+                  onLoad={updateDimensions}
+                  alt="Upload preview"
+                  className="max-w-full max-h-[450px] rounded-2xl object-contain select-none"
+                  draggable="false"
+                />
+              )}
 
               {/* Processing Loader */}
               {processing && (
@@ -623,8 +741,8 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
                 </div>
               )}
 
-              {/* Bounding Box SVG overlay with adjustable corner points (Only shows when loaded and not scanning) */}
-              {!scanning && imgDimensions && (
+              {/* Bounding Box SVG overlay with adjustable corner points (Only shows when loaded and not scanning and not in comparison view) */}
+              {!scanning && imgDimensions && (!showComparison || !processedImage) && (
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-20 flex items-center justify-center">
                   {/* SVG Container mapped directly over the image dimensions */}
                   <div 

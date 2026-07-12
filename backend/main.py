@@ -174,43 +174,87 @@ async def process_plate(
             if logo_img is None:
                 # Generate a high-quality stylized brand logo dynamically on canvas
                 # We can draw it as a numpy array
-                logo_w, logo_h = 300, 100
+                logo_w, logo_h = 1200, 400
                 logo_img = np.zeros((logo_h, logo_w, 4), dtype=np.uint8)
                 
                 # Set background color
                 bg_color = (74, 163, 22, 255) if logo_brand == "carvona" else (55, 41, 31, 255) # BGR(A)
                 logo_img[:, :] = bg_color
                 
-                # Add text
                 text = "CARVONA" if logo_brand == "carvona" else "PREMIUM MOTORS"
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.8
-                thickness = 2
                 
-                # Get text size for centering
-                (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
-                text_x = (logo_w - text_w) // 2
-                text_y = (logo_h + text_h) // 2
-                
-                # Draw shadow
-                cv2.putText(logo_img, text, (text_x+1, text_y+1), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
-                # Draw white text
-                cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
+                if logo_brand == "carvona":
+                    # Draw Stylized Circular Car Logo Icon + CARVONA Text next to each other
+                    font_scale = 3.0
+                    thickness = 8
+                    
+                    # Get text size
+                    (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                    
+                    # Total width of: icon (diameter 220) + spacing (60) + text_w
+                    total_w = 220 + 60 + text_w
+                    start_x = (logo_w - total_w) // 2
+                    
+                    icon_x = start_x + 110 # Center of circle
+                    icon_y = 200
+                    
+                    # 1. Draw outer circle ring (white)
+                    cv2.circle(logo_img, (icon_x, icon_y), 100, (255, 255, 255, 255), 8, cv2.LINE_AA)
+                    cv2.circle(logo_img, (icon_x, icon_y), 88, (255, 255, 255, 80), 2, cv2.LINE_AA)
+                    
+                    # 2. Draw car front outline inside circle
+                    # Roof/Windshield
+                    windshield_pts = np.array([
+                        [icon_x - 35, icon_y - 8],
+                        [icon_x + 35, icon_y - 8],
+                        [icon_x + 22, icon_y - 32],
+                        [icon_x - 22, icon_y - 32]
+                    ], dtype=np.int32)
+                    cv2.polylines(logo_img, [windshield_pts], True, (255, 255, 255, 255), 4, cv2.LINE_AA)
+                    
+                    # Hood line
+                    cv2.line(logo_img, (icon_x - 50, icon_y - 8), (icon_x + 50, icon_y - 8), (255, 255, 255, 255), 4, cv2.LINE_AA)
+                    
+                    # Side contour
+                    cv2.line(logo_img, (icon_x - 50, icon_y - 8), (icon_x - 54, icon_y + 20), (255, 255, 255, 255), 4, cv2.LINE_AA)
+                    cv2.line(logo_img, (icon_x + 50, icon_y - 8), (icon_x + 54, icon_y + 20), (255, 255, 255, 255), 4, cv2.LINE_AA)
+                    
+                    # Grille outline
+                    cv2.rectangle(logo_img, (icon_x - 30, icon_y + 8), (icon_x + 30, icon_y + 30), (255, 255, 255, 255), 3, cv2.LINE_AA)
+                    # Grille vertical bars
+                    for gr_x in range(icon_x - 18, icon_x + 25, 12):
+                        cv2.line(logo_img, (gr_x, icon_y + 8), (gr_x, icon_y + 30), (255, 255, 255, 255), 2, cv2.LINE_AA)
+                    
+                    # Headlights
+                    cv2.circle(logo_img, (icon_x - 44, icon_y + 12), 8, (255, 255, 255, 255), -1, cv2.LINE_AA)
+                    cv2.circle(logo_img, (icon_x + 44, icon_y + 12), 8, (255, 255, 255, 255), -1, cv2.LINE_AA)
+                    
+                    # Bumper bar
+                    cv2.line(logo_img, (icon_x - 58, icon_y + 36), (icon_x + 58, icon_y + 36), (255, 255, 255, 255), 6, cv2.LINE_AA)
+                    
+                    # 3. Draw text next to the icon
+                    text_x = start_x + 220 + 60
+                    text_y = (logo_h + text_h) // 2
+                    
+                    # Draw shadow
+                    cv2.putText(logo_img, text, (text_x+4, text_y+4), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
+                    # Draw white text
+                    cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
+                else:
+                    # Default centered text for non-carvona default logos
+                    font_scale = 3.2
+                    thickness = 8
+                    (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                    text_x = (logo_w - text_w) // 2
+                    text_y = (logo_h + text_h) // 2
+                    
+                    cv2.putText(logo_img, text, (text_x+4, text_y+4), font, font_scale, (0, 0, 0, 255), thickness, cv2.LINE_AA)
+                    cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
 
             # Ensure logo has alpha channel
             if logo_img.shape[2] == 3:
                 logo_img = cv2.cvtColor(logo_img, cv2.COLOR_BGR2BGRA)
-
-            # Logo original size
-            lh, lw, _ = logo_img.shape
-
-            # Define perspective source coordinates
-            src_pts = np.array([
-                [0, 0],         # TL
-                [lw - 1, 0],     # TR
-                [lw - 1, lh - 1], # BR
-                [0, lh - 1]      # BL
-            ], dtype=np.float32)
 
             # Calculate midpoints for adjustments
             center = np.mean(dst_pts, axis=0)
@@ -245,11 +289,33 @@ async def process_plate(
             
             adjusted_dst = np.array(adjusted_dst, dtype=np.float32)
 
+            # Logo original size
+            lh, lw, _ = logo_img.shape
+
+            # Bounding box of destination points
+            x_rect, y_rect, bw, bh = cv2.boundingRect(adjusted_dst.astype(np.int32))
+            
+            # Anti-aliasing downsampling: If the logo image is much larger than the target area, 
+            # downsample with cv2.INTER_AREA to avoid jagged/aliased pixels.
+            target_w = max(10, int(bw * 2))
+            target_h = max(10, int(bh * 2))
+            if lw > target_w or lh > target_h:
+                logo_img = cv2.resize(logo_img, (target_w, target_h), interpolation=cv2.INTER_AREA)
+                lh, lw, _ = logo_img.shape
+
+            # Define perspective source coordinates
+            src_pts = np.array([
+                [0, 0],         # TL
+                [lw - 1, 0],     # TR
+                [lw - 1, lh - 1], # BR
+                [0, lh - 1]      # BL
+            ], dtype=np.float32)
+
             # Compute Homography
             M = cv2.getPerspectiveTransform(src_pts, adjusted_dst)
 
-            # Warp logo image to fit plate coordinates on base image
-            warped_logo = cv2.warpPerspective(logo_img, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0,0))
+            # Warp logo image to fit plate coordinates on base image (using INTER_CUBIC for clean edges)
+            warped_logo = cv2.warpPerspective(logo_img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0,0))
 
             # Extract color and alpha mask
             warped_color = warped_logo[:, :, :3]

@@ -24,6 +24,7 @@ backend_dir = os.path.dirname(os.path.abspath(__file__))
 
 image = (
     modal.Image.debian_slim(python_version="3.10")
+    .apt_install("libgl1", "libglib2.0-0")
     .pip_install(
         "fastapi==0.111.0",
         "uvicorn==0.30.1",
