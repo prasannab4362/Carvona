@@ -3,7 +3,8 @@ import requests
 import sys
 
 MODEL_URL = "https://huggingface.co/PrasannaBAImodel/license-plate-keypoint-detection/resolve/main/license_plate_keypoint.pt"
-MODEL_PATH = "license_plate_keypoint.pt"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(current_dir, "license_plate_keypoint.pt")
 
 def download_model():
     if os.path.exists(MODEL_PATH):
