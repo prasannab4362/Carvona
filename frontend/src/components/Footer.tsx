@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { Car } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,8 +10,8 @@ export default function Footer() {
         {/* Brand column */}
         <div className="md:col-span-2 flex flex-col gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
-              <Car size={16} />
+            <div className="w-8 h-8 rounded-full overflow-hidden shadow border border-border-light">
+              <img src="/logo.jpg" alt="Carvona Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-mono text-lg font-bold tracking-tight text-text-main">
               CARVONA

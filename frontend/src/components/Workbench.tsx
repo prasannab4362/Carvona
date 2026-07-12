@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, MouseEvent as ReactMouseEvent } from "react";
+import React, { useState, useRef, useEffect, useCallback, MouseEvent as ReactMouseEvent } from "react";
 import { Upload, Sliders, RefreshCw, Download, Image as ImageIcon, Check, Info } from "lucide-react";
 import PaymentModal from "./PaymentModal";
 
@@ -10,42 +10,72 @@ const SAMPLE_IMAGES = [
     id: "sports",
     name: "Sports Coupe",
     url: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1000&q=80",
-    plate: { x: 45.5, y: 67.2, w: 11.2, h: 5.5 },
+    keypoints: [
+      { x: 0.455, y: 0.672 },
+      { x: 0.567, y: 0.672 },
+      { x: 0.567, y: 0.727 },
+      { x: 0.455, y: 0.727 },
+    ],
   },
   {
     id: "suv",
     name: "Luxury SUV",
     url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80",
-    plate: { x: 44.5, y: 79.5, w: 12.0, h: 5.2 },
+    keypoints: [
+      { x: 0.445, y: 0.795 },
+      { x: 0.565, y: 0.795 },
+      { x: 0.565, y: 0.847 },
+      { x: 0.445, y: 0.847 },
+    ],
   },
   {
     id: "sedan",
     name: "Electric Sedan",
     url: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80",
-    plate: { x: 44.2, y: 73.8, w: 12.5, h: 5.8 },
+    keypoints: [
+      { x: 0.442, y: 0.738 },
+      { x: 0.567, y: 0.738 },
+      { x: 0.567, y: 0.796 },
+      { x: 0.442, y: 0.796 },
+    ],
   },
 ];
 
-interface PlateCoords {
-  x: number; // percentage
-  y: number; // percentage
-  w: number; // percentage
-  h: number; // percentage
+interface Point {
+  x: number; // normalized (0 to 1)
+  y: number; // normalized (0 to 1)
 }
 
-export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blur" | "logo" }) {
+const dataURLtoBlob = (dataurl: string): Blob => {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+};
+
+export default function Workbench({ defaultTool = "blur", hideTabs = false }: { defaultTool?: "blur" | "logo"; hideTabs?: boolean }) {
   const [image, setImage] = useState<string | null>(null);
+  const [rawFile, setRawFile] = useState<File | null>(null);
   const [imageName, setImageName] = useState<string>("");
   const [scanning, setScanning] = useState<boolean>(false);
   const [scanProgress, setScanProgress] = useState<number>(0);
   const [selectedTool, setSelectedTool] = useState<"blur" | "logo">(defaultTool);
+  const [detectionError, setDetectionError] = useState<string | null>(null);
   
-  // Bounding box states
-  const [coords, setCoords] = useState<PlateCoords>({ x: 40, y: 60, w: 20, h: 8 });
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [isResizing, setIsResizing] = useState<string | null>(null); // "nw", "ne", "se", "sw"
-  const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const boxStart = useRef<PlateCoords>({ x: 0, y: 0, w: 0, h: 0 });
+  // 4 corner keypoints (normalized 0 to 1)
+  // Order: 0: TL, 1: TR, 2: BR, 3: BL
+  const [keypoints, setKeypoints] = useState<Point[]>([
+    { x: 0.40, y: 0.46 },
+    { x: 0.60, y: 0.46 },
+    { x: 0.60, y: 0.54 },
+    { x: 0.40, y: 0.54 },
+  ]);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
 
   // Blur settings
   const [blurIntensity, setBlurIntensity] = useState<number>(10);
@@ -54,6 +84,7 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
 
   // Logo settings
   const [selectedLogo, setSelectedLogo] = useState<"carvona" | "premium" | "custom">("carvona");
+  const [customLogoFile, setCustomLogoFile] = useState<File | null>(null);
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
   const [logoScale, setLogoScale] = useState<number>(100);
   const [logoRotate, setLogoRotate] = useState<number>(0);
@@ -62,23 +93,35 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
 
   // Trial / Payment States
   const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
-  const [trialUsed, setTrialUsed] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("carvona_trial_used") === "true";
-    }
-    return false;
-  });
+  const [trialUsed, setTrialUsed] = useState<boolean>(false);
+  const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [imgDimensions, setImgDimensions] = useState<{ width: number; height: number } | null>(null);
 
-  const selectSample = (sample: typeof SAMPLE_IMAGES[0]) => {
+  const selectSample = useCallback(async (sample: typeof SAMPLE_IMAGES[0]) => {
+    if (processedImage) {
+      window.URL.revokeObjectURL(processedImage);
+      setProcessedImage(null);
+    }
     setScanning(true);
     setScanProgress(0);
     setImage(sample.url);
     setImageName(`${sample.name.toLowerCase().replace(/\s+/g, "-")}.jpg`);
+    setDetectionError(null);
+
+    try {
+      const response = await fetch(sample.url);
+      const blob = await response.blob();
+      const file = new File([blob], `${sample.name.toLowerCase().replace(/\s+/g, "-")}.jpg`, { type: "image/jpeg" });
+      setRawFile(file);
+    } catch (err) {
+      console.error("Failed to load sample image file:", err);
+    }
     
     // Simulate smart detection scanning
     const interval = setInterval(() => {
@@ -86,21 +129,121 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
         if (prev >= 100) {
           clearInterval(interval);
           setScanning(false);
-          setCoords(sample.plate);
+          setKeypoints(sample.keypoints);
           return 100;
         }
         return prev + 5;
       });
     }, 45);
+  }, [processedImage]);
+
+  // Check for pending image transferred from the homepage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        setTrialUsed(localStorage.getItem("carvona_trial_used") === "true");
+      }, 0);
+    }
+    const pendingImage = sessionStorage.getItem("carvona_pending_image");
+    const pendingName = sessionStorage.getItem("carvona_pending_name") || "uploaded-image.jpg";
+    const pendingType = sessionStorage.getItem("carvona_pending_type");
+    const pendingSampleId = sessionStorage.getItem("carvona_pending_sample_id");
+
+    if (pendingImage) {
+      // Clear cache immediately
+      sessionStorage.removeItem("carvona_pending_image");
+      sessionStorage.removeItem("carvona_pending_name");
+      sessionStorage.removeItem("carvona_pending_type");
+      sessionStorage.removeItem("carvona_pending_sample_id");
+
+      if (pendingType === "sample" && pendingSampleId) {
+        const sample = SAMPLE_IMAGES.find((s) => s.id === pendingSampleId);
+        if (sample) {
+          setTimeout(() => {
+            selectSample(sample);
+          }, 0);
+          return;
+        }
+      }
+
+      // User upload
+      setTimeout(() => {
+        setImage(pendingImage);
+        setImageName(pendingName);
+        setScanning(true);
+        setScanProgress(20);
+        setDetectionError(null);
+
+        try {
+          const blob = dataURLtoBlob(pendingImage);
+          const file = new File([blob], pendingName, { type: blob.type });
+          setRawFile(file);
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          fetch("/api/detect", {
+            method: "POST",
+            body: formData,
+          })
+            .then((res) => {
+              setScanProgress(75);
+              if (!res.ok) throw new Error("API failed");
+              return res.json();
+            })
+            .then((data) => {
+              setScanProgress(100);
+              if (data.success && data.keypoints) {
+                setKeypoints(data.keypoints);
+              } else {
+                setKeypoints([
+                  { x: 0.40, y: 0.46 },
+                  { x: 0.60, y: 0.46 },
+                  { x: 0.60, y: 0.54 },
+                  { x: 0.40, y: 0.54 },
+                ]);
+                setDetectionError("License plate not automatically detected. Adjust corners manually.");
+              }
+            })
+            .catch(() => {
+              setKeypoints([
+                { x: 0.40, y: 0.46 },
+                { x: 0.60, y: 0.46 },
+                { x: 0.60, y: 0.54 },
+                { x: 0.40, y: 0.54 },
+              ]);
+              setDetectionError("Unable to connect to AI server. Adjust coordinates manually.");
+            })
+            .finally(() => {
+              setScanning(false);
+            });
+        } catch (err) {
+          console.error(err);
+          setScanning(false);
+          setDetectionError("Error processing transferred photo.");
+        }
+      }, 0);
+    }
+  }, [selectSample]);
+
+  const updateDimensions = () => {
+    if (imgRef.current) {
+      setImgDimensions({
+        width: imgRef.current.clientWidth,
+        height: imgRef.current.clientHeight,
+      });
+    }
   };
 
-  // Pre-load default Corvette image on first load
   useEffect(() => {
-    const timer = setTimeout(() => {
-      selectSample(SAMPLE_IMAGES[0]);
-    }, 0);
-    return () => clearTimeout(timer);
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, []);
+
+  // Update dimensions whenever image URL or keypoints update to keep overlay in sync
+  useEffect(() => {
+    updateDimensions();
+  }, [image, keypoints]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,30 +251,70 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
     processFile(file);
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
+    if (processedImage) {
+      window.URL.revokeObjectURL(processedImage);
+      setProcessedImage(null);
+    }
+    setScanning(true);
+    setScanProgress(10);
+    setImageName(file.name);
+    setRawFile(file);
+    setDetectionError(null);
+
+    // Read and preview locally first
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
-        setScanning(true);
-        setScanProgress(0);
         setImage(event.target.result as string);
-        setImageName(file.name);
-        
-        const interval = setInterval(() => {
-          setScanProgress((prev) => {
-            if (prev >= 100) {
-              clearInterval(interval);
-              setScanning(false);
-              // Default to center bounding box for custom images
-              setCoords({ x: 40, y: 46, w: 20, h: 8 });
-              return 100;
-            }
-            return prev + 10;
-          });
-        }, 80);
       }
     };
     reader.readAsDataURL(file);
+
+    // Call FastAPI detect endpoint
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setScanProgress(30);
+      const response = await fetch("/api/detect", {
+        method: "POST",
+        body: formData,
+      });
+      setScanProgress(70);
+
+      if (!response.ok) {
+        throw new Error("Plate detection failed");
+      }
+
+      const data = await response.json();
+      setScanProgress(100);
+
+      if (data.success && data.keypoints) {
+        setKeypoints(data.keypoints);
+      } else {
+        // Fallback to default centered keypoints if AI detects no plate
+        setKeypoints([
+          { x: 0.40, y: 0.46 },
+          { x: 0.60, y: 0.46 },
+          { x: 0.60, y: 0.54 },
+          { x: 0.40, y: 0.54 },
+        ]);
+        setDetectionError("License plate not automatically detected. Drag the corners to adjust manually.");
+      }
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      setKeypoints([
+        { x: 0.40, y: 0.46 },
+        { x: 0.60, y: 0.46 },
+        { x: 0.60, y: 0.54 },
+        { x: 0.40, y: 0.54 },
+      ]);
+      setDetectionError("Unable to connect to AI server. Adjust coordinates manually.");
+    } finally {
+      setScanning(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -149,6 +332,7 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
   const handleCustomLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCustomLogoFile(file);
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
@@ -159,207 +343,166 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
     reader.readAsDataURL(file);
   };
 
-  // Drag and Resize handlers for the Bounding Box
-  const handleBoxMouseDown = (e: ReactMouseEvent) => {
+  // 4-point drag event handlers
+  const handleHandleMouseDown = (e: ReactMouseEvent, idx: number) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsDragging(true);
-    dragStart.current = { x: e.clientX, y: e.clientY };
-    boxStart.current = { ...coords };
-  };
-
-  const handleResizeMouseDown = (e: ReactMouseEvent, handle: string) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setIsResizing(handle);
-    dragStart.current = { x: e.clientX, y: e.clientY };
-    boxStart.current = { ...coords };
+    setDraggingIdx(idx);
   };
 
   const handleContainerMouseMove = (e: ReactMouseEvent) => {
-    if (!isDragging && !isResizing) return;
+    if (draggingIdx === null) return;
     if (!containerRef.current || !imgRef.current) return;
 
     const rect = imgRef.current.getBoundingClientRect();
-    const deltaX = ((e.clientX - dragStart.current.x) / rect.width) * 100;
-    const deltaY = ((e.clientY - dragStart.current.y) / rect.height) * 100;
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
 
-    if (isDragging) {
-      // Keep boundaries inside 0-100%
-      let newX = boxStart.current.x + deltaX;
-      let newY = boxStart.current.y + deltaY;
+    // Constrain coordinates to [0, 1] bounds
+    const constrainedX = Math.max(0, Math.min(1, x));
+    const constrainedY = Math.max(0, Math.min(1, y));
 
-      newX = Math.max(0, Math.min(100 - boxStart.current.w, newX));
-      newY = Math.max(0, Math.min(100 - boxStart.current.h, newY));
-
-      setCoords((prev) => ({ ...prev, x: newX, y: newY }));
-    } else if (isResizing) {
-      let newX = boxStart.current.x;
-      let newY = boxStart.current.y;
-      let newW = boxStart.current.w;
-      let newH = boxStart.current.h;
-
-      if (isResizing.includes("n")) {
-        const potentialY = boxStart.current.y + deltaY;
-        const potentialH = boxStart.current.h - deltaY;
-        if (potentialH > 2 && potentialY > 0) {
-          newY = potentialY;
-          newH = potentialH;
-        }
-      }
-      if (isResizing.includes("s")) {
-        const potentialH = boxStart.current.h + deltaY;
-        if (potentialH > 2 && (boxStart.current.y + potentialH) < 100) {
-          newH = potentialH;
-        }
-      }
-      if (isResizing.includes("w")) {
-        const potentialX = boxStart.current.x + deltaX;
-        const pointerW = boxStart.current.w - deltaX;
-        if (pointerW > 2 && potentialX > 0) {
-          newX = potentialX;
-          newW = pointerW;
-        }
-      }
-      if (isResizing.includes("e")) {
-        const pointerW = boxStart.current.w + deltaX;
-        if (pointerW > 2 && (boxStart.current.x + pointerW) < 100) {
-          newW = pointerW;
-        }
-      }
-
-      setCoords({ x: newX, y: newY, w: newW, h: newH });
-    }
+    setKeypoints((prev) => {
+      const next = [...prev];
+      next[draggingIdx] = { x: constrainedX, y: constrainedY };
+      return next;
+    });
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(null);
+    setDraggingIdx(null);
   };
 
   useEffect(() => {
     window.addEventListener("mouseup", handleMouseUp);
     return () => window.removeEventListener("mouseup", handleMouseUp);
-  }, []);
+  }, [draggingIdx]);
 
-  // Process the final output on high-res Canvas
-  const drawProcessedImage = (): Promise<string> => {
-    return new Promise((resolve) => {
-      if (!image || !imgRef.current) {
-        resolve("");
-        return;
+  // Request high-res perspective warped output from FastAPI
+  const processImageRequest = useCallback(async (): Promise<Blob | null> => {
+    if (!image) return null;
+
+    const formData = new FormData();
+    
+    // Add base image file
+    if (rawFile) {
+      formData.append("file", rawFile);
+    } else {
+      // If it's a sample URL, fetch it and convert to Blob
+      const response = await fetch(image);
+      const blob = await response.blob();
+      formData.append("file", blob, imageName);
+    }
+
+    formData.append("mode", selectedTool);
+    formData.append("coords", JSON.stringify(keypoints));
+    
+    // Blur settings
+    formData.append("blur_style", blurStyle);
+    formData.append("blur_intensity", blurIntensity.toString());
+    formData.append("solid_color", solidColor);
+
+    // Logo settings
+    formData.append("logo_brand", selectedLogo);
+    formData.append("logo_scale", logoScale.toString());
+    formData.append("logo_rotate", logoRotate.toString());
+    formData.append("logo_skew_x", logoSkewX.toString());
+    formData.append("logo_skew_y", logoSkewY.toString());
+
+    if (selectedLogo === "custom" && customLogoFile) {
+      formData.append("logo_file", customLogoFile);
+    }
+
+    try {
+      const response = await fetch("/api/process", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Server-side image warping failed");
       }
 
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve("");
-          return;
-        }
+      return await response.blob();
+    } catch (err) {
+      console.error(err);
+      setDetectionError("Warping/Processing failed. Ensure that your python backend is running.");
+      return null;
+    }
+  }, [
+    image,
+    rawFile,
+    imageName,
+    selectedTool,
+    keypoints,
+    blurStyle,
+    blurIntensity,
+    solidColor,
+    selectedLogo,
+    logoScale,
+    logoRotate,
+    logoSkewX,
+    logoSkewY,
+    customLogoFile
+  ]);
 
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (processedImage) {
+        window.URL.revokeObjectURL(processedImage);
+      }
+    };
+  }, [processedImage]);
 
-        // Draw background original image
-        ctx.drawImage(img, 0, 0);
-
-        // Convert percentage coords to pixel coords
-        const pxX = (coords.x / 100) * canvas.width;
-        const pxY = (coords.y / 100) * canvas.height;
-        const pxW = (coords.w / 100) * canvas.width;
-        const pxH = (coords.h / 100) * canvas.height;
-
-        if (selectedTool === "blur") {
-          if (blurStyle === "solid") {
-            ctx.fillStyle = solidColor;
-            ctx.fillRect(pxX, pxY, pxW, pxH);
-          } else if (blurStyle === "pixel") {
-            // Downscale the box, then redraw it upscaled
-            const pixelSize = Math.max(2, Math.floor(blurIntensity / 2));
-            const wScaled = Math.max(1, Math.floor(pxW / pixelSize));
-            const hScaled = Math.max(1, Math.floor(pxH / pixelSize));
-
-            const tempCanvas = document.createElement("canvas");
-            tempCanvas.width = wScaled;
-            tempCanvas.height = hScaled;
-            const tempCtx = tempCanvas.getContext("2d");
-            if (tempCtx) {
-              tempCtx.imageSmoothingEnabled = false;
-              tempCtx.drawImage(canvas, pxX, pxY, pxW, pxH, 0, 0, wScaled, hScaled);
-
-              ctx.imageSmoothingEnabled = false;
-              ctx.drawImage(tempCanvas, 0, 0, wScaled, hScaled, pxX, pxY, pxW, pxH);
-              ctx.imageSmoothingEnabled = true;
-            }
-          } else if (blurStyle === "smooth") {
-            // Simple canvas box blur simulation (draw offset overlapping images with opacity)
-            const passes = blurIntensity;
-            ctx.globalAlpha = 0.15;
-            for (let i = -passes; i <= passes; i += 2) {
-              for (let j = -passes; j <= passes; j += 2) {
-                if (i === 0 && j === 0) continue;
-                ctx.drawImage(img, pxX, pxY, pxW, pxH, pxX + i, pxY + j, pxW, pxH);
-              }
-            }
-            ctx.globalAlpha = 1.0;
+  // Trigger high-res or preview processing automatically
+  const triggerAutoProcess = useCallback(async () => {
+    if (!image || scanning || !rawFile) return;
+    setProcessing(true);
+    try {
+      const blob = await processImageRequest();
+      if (blob) {
+        setProcessedImage((prev) => {
+          if (prev) {
+            window.URL.revokeObjectURL(prev);
           }
-        } else if (selectedTool === "logo") {
-          // Draw a background badge (plate base)
-          ctx.fillStyle = selectedLogo === "premium" ? "#1F2937" : "#16A34A";
-          
-          // Draw solid background plate
-          ctx.fillRect(pxX, pxY, pxW, pxH);
+          return window.URL.createObjectURL(blob);
+        });
+      }
+    } catch (err) {
+      console.error("Auto processing failed:", err);
+    } finally {
+      setProcessing(false);
+    }
+  }, [image, scanning, rawFile, processImageRequest]);
 
-          // Save state to apply transformations
-          ctx.save();
-          ctx.translate(pxX + pxW / 2, pxY + pxH / 2);
+  // Debounced auto-processing trigger
+  useEffect(() => {
+    if (scanning || draggingIdx !== null || !image || !rawFile) return;
 
-          // Apply rotation, scale, and skew
-          ctx.rotate((logoRotate * Math.PI) / 180);
-          ctx.transform(
-            1, // horizontal scaling
-            Math.tan((logoSkewY * Math.PI) / 180), // vertical skew
-            Math.tan((logoSkewX * Math.PI) / 180), // horizontal skew
-            1, // vertical scaling
-            0, // horizontal translation
-            0  // vertical translation
-          );
+    const delayDebounce = setTimeout(() => {
+      triggerAutoProcess();
+    }, 150);
 
-          const scaleRatio = logoScale / 100;
-          const logoW = pxW * 0.8 * scaleRatio;
-          const logoH = pxH * 0.6 * scaleRatio;
-
-          if (selectedLogo === "custom" && customLogoUrl) {
-            const logoImg = new Image();
-            logoImg.onload = () => {
-              ctx.drawImage(logoImg, -logoW / 2, -logoH / 2, logoW, logoH);
-              ctx.restore();
-              resolve(canvas.toDataURL("image/jpeg", 0.95));
-            };
-            logoImg.src = customLogoUrl;
-            return;
-          } else {
-            // Draw pre-made stylized text logos
-            ctx.fillStyle = "#FFFFFF";
-            ctx.font = `bold ${Math.floor(pxH * 0.45 * scaleRatio)}px monospace`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            
-            const logoText = selectedLogo === "premium" ? "PREMIUM MOTORS" : "CARVONA";
-            ctx.fillText(logoText, 0, 0);
-          }
-
-          ctx.restore();
-        }
-
-        resolve(canvas.toDataURL("image/jpeg", 0.95));
-      };
-      img.src = image;
-    });
-  };
+    return () => clearTimeout(delayDebounce);
+  }, [
+    keypoints,
+    selectedTool,
+    blurStyle,
+    blurIntensity,
+    solidColor,
+    selectedLogo,
+    logoScale,
+    logoRotate,
+    logoSkewX,
+    logoSkewY,
+    customLogoUrl,
+    image,
+    scanning,
+    draggingIdx,
+    rawFile,
+    triggerAutoProcess
+  ]);
 
   const handleDownload = async () => {
     if (!image) return;
@@ -371,15 +514,17 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
     }
 
     // Process and download
-    const dataUrl = await drawProcessedImage();
-    if (!dataUrl) return;
+    const blob = await processImageRequest();
+    if (!blob) return;
 
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = dataUrl;
+    link.href = url;
     link.download = `carvona-edited-${imageName}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 
     // Consume free trial if logo replace was selected
     if (selectedTool === "logo" && !trialUsed) {
@@ -391,15 +536,17 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
 
   const handlePaymentSuccess = async () => {
     // Process and download immediately after successful payment
-    const dataUrl = await drawProcessedImage();
-    if (!dataUrl) return;
+    const blob = await processImageRequest();
+    if (!blob) return;
 
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = dataUrl;
+    link.href = url;
     link.download = `carvona-edited-${imageName}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -448,11 +595,20 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
             >
               <img
                 ref={imgRef}
-                src={image}
+                src={draggingIdx !== null ? image : (processedImage || image)}
+                onLoad={updateDimensions}
                 alt="Upload preview"
                 className="max-w-full max-h-[450px] rounded-2xl object-contain select-none"
                 draggable="false"
               />
+
+              {/* Processing Loader */}
+              {processing && (
+                <div className="absolute top-4 right-4 z-40 bg-black/75 backdrop-blur text-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-white/10">
+                  <RefreshCw size={12} className="animate-spin text-primary" />
+                  <span className="text-[10px] font-mono font-semibold tracking-wider uppercase">Processing...</span>
+                </div>
+              )}
 
               {/* AI Scanning Animation Overlay */}
               {scanning && (
@@ -461,80 +617,50 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
                   <div className="bg-white/90 backdrop-blur border border-border-light px-5 py-2.5 rounded-2xl shadow-lg flex items-center gap-3">
                     <RefreshCw size={16} className="animate-spin text-primary" />
                     <span className="text-sm font-semibold font-mono text-text-main">
-                      AI DETECTING PLATE... {scanProgress}%
+                      AI SCANNING PLATE... {scanProgress}%
                     </span>
                   </div>
                 </div>
               )}
 
-              {/* Interactive Bounding Box (Only shows when loaded and not scanning) */}
-              {!scanning && (
-                <div
-                  onMouseDown={handleBoxMouseDown}
-                  className="absolute border-[3px] border-primary cursor-move group select-none shadow-[0_0_10px_rgba(22,163,74,0.5)] bg-primary/10"
-                  style={{
-                    left: `${coords.x}%`,
-                    top: `${coords.y}%`,
-                    width: `${coords.w}%`,
-                    height: `${coords.h}%`,
-                  }}
-                >
-                  {/* Bounding box corners for resizing */}
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "nw")}
-                    className="absolute -top-2 -left-2 w-3.5 h-3.5 bg-white border-2 border-primary rounded-full cursor-nwse-resize"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "ne")}
-                    className="absolute -top-2 -right-2 w-3.5 h-3.5 bg-white border-2 border-primary rounded-full cursor-nesw-resize"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "se")}
-                    className="absolute -bottom-2 -right-2 w-3.5 h-3.5 bg-white border-2 border-primary rounded-full cursor-nwse-resize"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "sw")}
-                    className="absolute -bottom-2 -left-2 w-3.5 h-3.5 bg-white border-2 border-primary rounded-full cursor-nesw-resize"
-                  />
+              {/* Bounding Box SVG overlay with adjustable corner points (Only shows when loaded and not scanning) */}
+              {!scanning && imgDimensions && (
+                <div className="absolute inset-0 w-full h-full pointer-events-none z-20 flex items-center justify-center">
+                  {/* SVG Container mapped directly over the image dimensions */}
+                  <div 
+                    className="relative pointer-events-auto"
+                    style={{
+                      width: `${imgDimensions.width}px`,
+                      height: `${imgDimensions.height}px`,
+                    }}
+                  >
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                      {/* Polygon displaying selection */}
+                      <polygon
+                        points={keypoints.map((pt) => `${pt.x * imgDimensions.width},${pt.y * imgDimensions.height}`).join(" ")}
+                        className="fill-primary/20 stroke-primary stroke-[3]"
+                      />
+                    </svg>
 
-                  {/* Dynamic Bounding Box Overlay for Live Preview */}
-                  <div className="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center pointer-events-none">
-                    {selectedTool === "blur" && (
-                      <div
-                        className="w-full h-full"
-                        style={{
-                          backdropFilter: blurStyle === "smooth" ? `blur(${blurIntensity}px)` : "none",
-                          backgroundColor: blurStyle === "solid" ? solidColor : "rgba(22,16,74,0.15)",
-                          display: blurStyle === "pixel" ? "flex" : "block",
-                        }}
-                      >
-                        {blurStyle === "pixel" && (
-                          <div className="w-full h-full bg-[radial-gradient(#16A34A_1px,transparent_1px)] [background-size:6px_6px] opacity-75" />
-                        )}
-                      </div>
-                    )}
-                    {selectedTool === "logo" && (
-                      <div
-                        className="w-full h-full flex items-center justify-center text-white font-mono font-bold"
-                        style={{
-                          backgroundColor: selectedLogo === "premium" ? "#1F2937" : "#16A34A",
-                          transform: `rotate(${logoRotate}deg) skew(${logoSkewX}deg, ${logoSkewY}deg) scale(${logoScale / 100})`,
-                        }}
-                      >
-                        {selectedLogo === "custom" && customLogoUrl ? (
-                          <img src={customLogoUrl} alt="Custom Logo" className="max-w-[85%] max-h-[85%] object-contain" />
-                        ) : (
-                          <span className="text-[10px] md:text-xs tracking-wider">
-                            {selectedLogo === "premium" ? "PREMIUM MOTORS" : "CARVONA"}
+                    {/* Corner Handle Dots */}
+                    {keypoints.map((pt, idx) => {
+                      const labels = ["TL", "TR", "BR", "BL"];
+                      return (
+                        <div
+                          key={idx}
+                          onMouseDown={(e) => handleHandleMouseDown(e, idx)}
+                          className="absolute w-5 h-5 -ml-2.5 -mt-2.5 bg-white border-2 border-primary rounded-full cursor-pointer shadow hover:scale-125 transition-transform flex items-center justify-center z-30 group"
+                          style={{
+                            left: `${pt.x * 100}%`,
+                            top: `${pt.y * 100}%`,
+                          }}
+                        >
+                          <span className="text-[7px] font-mono font-bold text-primary select-none pointer-events-none">
+                            {labels[idx]}
                           </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bounding box helper tag */}
-                  <div className="absolute -top-6 left-0 bg-primary text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow">
-                    PLATE AREA (DRAG TO MOVE)
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -542,11 +668,27 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
           )}
         </div>
 
+        {/* Warning notification for detection errors */}
+        {detectionError && !scanning && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-4 py-3 rounded-2xl">
+            <Info size={16} className="shrink-0 mt-0.5" />
+            <span>{detectionError}</span>
+          </div>
+        )}
+
         {/* Sample Selection */}
         <div className="flex flex-col gap-3">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
-            <ImageIcon size={14} /> Don&apos;t have a photo? Try these samples:
-          </span>
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <ImageIcon size={14} /> Try samples or upload yours:
+            </span>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-xl shadow hover:bg-primary-hover transition-all duration-200"
+            >
+              <Upload size={12} className="stroke-[2.5]" /> Upload Car Image
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-4">
             {SAMPLE_IMAGES.map((sample) => (
               <button
@@ -574,34 +716,36 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
       <div className="lg:col-span-4 bg-white rounded-3xl border border-border-light p-6 shadow-sm flex flex-col gap-6">
         <div>
           <h3 className="text-lg font-bold text-text-main flex items-center gap-2">
-            <Sliders size={18} className="text-primary" /> Editing Studio
+            <Sliders size={18} className="text-primary" /> AI Warp Studio
           </h3>
           <p className="text-xs text-text-muted mt-1">Configure your license plate mask</p>
         </div>
 
         {/* Tab Selection */}
-        <div className="grid grid-cols-2 p-1 bg-section rounded-xl border border-border-light">
-          <button
-            onClick={() => setSelectedTool("blur")}
-            className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-              selectedTool === "blur"
-                ? "bg-white text-primary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            }`}
-          >
-            Plate Blur
-          </button>
-          <button
-            onClick={() => setSelectedTool("logo")}
-            className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-              selectedTool === "logo"
-                ? "bg-white text-primary shadow-sm"
-                : "text-text-muted hover:text-text-main"
-            }`}
-          >
-            Logo Replacement
-          </button>
-        </div>
+        {!hideTabs && (
+          <div className="grid grid-cols-2 p-1 bg-section rounded-xl border border-border-light">
+            <button
+              onClick={() => setSelectedTool("blur")}
+              className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                selectedTool === "blur"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-main"
+              }`}
+            >
+              Plate Blur
+            </button>
+            <button
+              onClick={() => setSelectedTool("logo")}
+              className={`py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                selectedTool === "logo"
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-main"
+              }`}
+            >
+              Logo Replacement
+            </button>
+          </div>
+        )}
 
         {/* Tool Config Section */}
         {selectedTool === "blur" ? (
@@ -731,7 +875,7 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
 
             {/* Fine adjustments */}
             <div className="flex flex-col gap-3 pt-2 border-t border-border-light">
-              <span className="text-xs font-semibold text-text-main">Perspective Controls</span>
+              <span className="text-xs font-semibold text-text-main">Perspective Offset Controls</span>
 
               {/* Scale */}
               <div className="flex flex-col gap-1.5">
@@ -813,15 +957,27 @@ export default function Workbench({ defaultTool = "blur" }: { defaultTool?: "blu
         {/* Global Action Buttons */}
         <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-border-light">
           {image && (
-            <button
-              onClick={() => {
-                setImage(null);
-                setCustomLogoUrl(null);
-              }}
-              className="w-full py-2.5 bg-transparent border border-border-light hover:bg-section text-text-main text-xs font-semibold rounded-xl transition-all duration-200"
-            >
-              Clear Image
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-2.5 bg-transparent border border-border-light hover:bg-section text-text-main text-xs font-semibold rounded-xl transition-all duration-200"
+              >
+                Upload New
+              </button>
+              <button
+                onClick={() => {
+                  setImage(null);
+                  setRawFile(null);
+                  setCustomLogoFile(null);
+                  setCustomLogoUrl(null);
+                  setDetectionError(null);
+                  setImgDimensions(null);
+                }}
+                className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-xl transition-all duration-200"
+              >
+                Clear Image
+              </button>
+            </div>
           )}
 
           <button

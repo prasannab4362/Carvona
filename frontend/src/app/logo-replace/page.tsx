@@ -2,14 +2,14 @@ import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Workbench from "@/components/Workbench";
-import { EyeOff, ShieldCheck, Zap } from "lucide-react";
+import { Award, Zap, Layers } from "lucide-react";
 
 export const metadata = {
-  title: "License Plate Blur - Free AI Privacy Tool | Carvona",
-  description: "Automatically blur vehicle license plates to protect privacy. 100% free, unlimited usage, no registration required.",
+  title: "License Plate Logo Replacement - Dealership Branding | Carvona",
+  description: "Brand your vehicle inventory with custom logos. High-quality perspective-corrected logo placement for ₹2/image. First download free.",
 };
 
-export default function BlurPage() {
+export default function LogoReplacePage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Navigation */}
@@ -21,29 +21,29 @@ export default function BlurPage() {
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto flex flex-col gap-4">
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-text-main">
-              License Plate Blur
+              Logo Replacement
             </h1>
             <p className="text-sm md:text-base text-text-muted">
-              Automatically identify and blur license plates. Free forever, unlimited use, zero login.
+              Brand your vehicle photos with your dealership logo. AI matches perspective, skew, and size for an integrated professional design.
             </p>
             
             {/* Quick stats / Features badges */}
             <div className="flex flex-wrap justify-center gap-4 mt-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 border border-green-200 text-xs font-semibold text-green-700">
-                <ShieldCheck size={14} /> 100% Secure & Private
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-700">
+                <Award size={14} /> Professional Dealership Look
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-                <Zap size={14} /> Instant AI Processing
+                <Zap size={14} /> AI Angle Matching
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700">
-                <EyeOff size={14} /> No Watermarks
+                <Layers size={14} /> Custom PNG/SVG Upload
               </span>
             </div>
           </div>
 
-          {/* Workbench focused on Blur */}
+          {/* Workbench focused on Logo Replacement */}
           <div className="w-full">
-            <Workbench defaultTool="blur" />
+            <Workbench defaultTool="logo" hideTabs={true} />
           </div>
         </div>
       </main>
