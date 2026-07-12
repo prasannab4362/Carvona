@@ -66,8 +66,8 @@ export default function BeforeAfterSlider() {
     handleMove(e.clientX);
   };
 
-  // Image source urls - sports car
-  const imageUrl = "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1200&h=700&q=80";
+  // Image source urls - Indian SUV
+  const imageUrl = "/sample-suv.png";
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
@@ -102,8 +102,8 @@ export default function BeforeAfterSlider() {
             draggable="false"
           />
           {/* Plate Mockup (Original) */}
-          <div className="absolute top-[67%] left-[45%] w-[12%] h-[6%] bg-white border border-gray-400 rounded flex items-center justify-center text-[10px] md:text-sm font-bold text-gray-800 tracking-wider shadow shadow-black/20">
-            MH12-GV-9843
+          <div className="absolute top-[67.7%] left-[41.6%] w-[18.2%] h-[3.8%] bg-white border border-gray-400 rounded flex items-center justify-center text-[10px] md:text-sm font-bold text-gray-800 tracking-wider shadow shadow-black/20">
+            HR 26 AA 5678
           </div>
         </div>
 
@@ -119,9 +119,9 @@ export default function BeforeAfterSlider() {
             draggable="false"
           />
           {/* Plate Mockup (Blurred / Replaced with Logo) */}
-          <div className="absolute top-[67%] left-[45%] w-[12%] h-[6%] bg-gradient-to-r from-primary to-secondary rounded flex items-center justify-center shadow shadow-primary/20">
-            <span className="text-[8px] md:text-xs font-mono font-bold text-white tracking-widest">
-              CARVONA
+          <div className="absolute top-[67.7%] left-[41.6%] w-[18.2%] h-[3.8%] bg-[#4aa316] rounded flex items-center justify-center shadow shadow-primary/20">
+            <span className="text-[8px] md:text-xs font-mono font-bold text-white tracking-widest flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full border border-white/50 flex items-center justify-center text-[5px]">o</span> CARVONA
             </span>
           </div>
         </div>
