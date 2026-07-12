@@ -19,7 +19,8 @@ app.add_middleware(
 )
 
 # Load YOLO model
-MODEL_PATH = "license_plate_keypoint.pt"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(current_dir, "license_plate_keypoint.pt")
 model = None
 
 def get_model():
