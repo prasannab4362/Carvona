@@ -66,8 +66,9 @@ export default function BeforeAfterSlider() {
     handleMove(e.clientX);
   };
 
-  // Image source urls - Indian SUV
-  const imageUrl = "/sample-suv.png";
+  // Image source urls - Indian SUV (Original and Processed)
+  const originalUrl = "/sample-suv.png";
+  const processedUrl = "/sample-suv-processed.png";
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
@@ -93,18 +94,14 @@ export default function BeforeAfterSlider() {
         onMouseDown={handleMouseDown}
         className="relative w-full h-[350px] md:h-[450px] rounded-3xl overflow-hidden cursor-ew-resize border border-border-light select-none shadow-ambient"
       >
-        {/* BEFORE: Original Image with license plate mockup */}
+        {/* BEFORE: Original Image */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src={imageUrl}
+            src={originalUrl}
             alt="Original car"
             className="w-full h-full object-cover"
             draggable="false"
           />
-          {/* Plate Mockup (Original) */}
-          <div className="absolute top-[77.0%] left-[41.9%] w-[17.9%] h-[6.7%] bg-white border border-gray-400 rounded flex items-center justify-center text-[10px] md:text-sm font-bold text-gray-800 tracking-wider shadow shadow-black/20">
-            HR 26 AA 5678
-          </div>
         </div>
 
         {/* AFTER: Replaced Image (clipped by slider position) */}
@@ -113,17 +110,11 @@ export default function BeforeAfterSlider() {
           style={{ clipPath: `polygon(${sliderPos}% 0, 100% 0, 100% 100%, ${sliderPos}% 100%)` }}
         >
           <img
-            src={imageUrl}
+            src={processedUrl}
             alt="Processed car"
             className="w-full h-full object-cover"
             draggable="false"
           />
-          {/* Plate Mockup (Blurred / Replaced with Logo) */}
-          <div className="absolute top-[77.0%] left-[41.9%] w-[17.9%] h-[6.7%] bg-[#4aa316] rounded flex items-center justify-center shadow shadow-primary/20">
-            <span className="text-[8px] md:text-xs font-mono font-bold text-white tracking-widest flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full border border-white/50 flex items-center justify-center text-[5px]">o</span> CARVONA
-            </span>
-          </div>
         </div>
 
         {/* Divider line & handle */}

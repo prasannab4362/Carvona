@@ -83,7 +83,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   const [solidColor, setSolidColor] = useState<string>("#FFFFFF");
 
   // Logo settings
-  const [selectedLogo, setSelectedLogo] = useState<"carvona" | "premium" | "custom">("carvona");
+  const [selectedLogo, setSelectedLogo] = useState<"carvona" | "custom">("carvona");
   const [customLogoFile, setCustomLogoFile] = useState<File | null>(null);
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
   const [logoScale, setLogoScale] = useState<number>(100);
@@ -96,7 +96,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
   const [trialUsed, setTrialUsed] = useState<boolean>(false);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
-  const [showComparison, setShowComparison] = useState<boolean>(false);
+  const [showComparison, setShowComparison] = useState<boolean>(true);
   const [sliderPos, setSliderPos] = useState<number>(50);
   const [isDraggingSlider, setIsDraggingSlider] = useState<boolean>(false);
 
@@ -111,7 +111,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       window.URL.revokeObjectURL(processedImage);
       setProcessedImage(null);
     }
-    setShowComparison(false);
+    setShowComparison(true);
     setScanning(true);
     setScanProgress(0);
     setImage(sample.url);
@@ -260,7 +260,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
       window.URL.revokeObjectURL(processedImage);
       setProcessedImage(null);
     }
-    setShowComparison(false);
+    setShowComparison(true);
     setScanning(true);
     setScanProgress(10);
     setImageName(file.name);
@@ -626,33 +626,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
               onMouseMove={handleContainerMouseMove}
               className="relative w-full h-full flex items-center justify-center overflow-hidden max-h-[500px]"
             >
-              {/* Compare toggle tabs */}
-              {processedImage && !scanning && (
-                <div className="absolute top-4 left-4 z-40 bg-white/90 backdrop-blur border border-border-light rounded-xl p-0.5 flex gap-1 shadow-md">
-                  <button
-                    type="button"
-                    onClick={() => setShowComparison(false)}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all ${
-                      !showComparison
-                        ? "bg-primary text-white"
-                        : "text-text-muted hover:text-text-main"
-                    }`}
-                  >
-                    Edit corners
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowComparison(true)}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all ${
-                      showComparison
-                        ? "bg-primary text-white"
-                        : "text-text-muted hover:text-text-main"
-                    }`}
-                  >
-                    Compare Before/After
-                  </button>
-                </div>
-              )}
+
 
               {showComparison && processedImage && imgDimensions ? (
                 <div
@@ -728,47 +702,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
                 </div>
               )}
 
-              {/* Bounding Box SVG overlay with adjustable corner points (Only shows when loaded and not scanning and not in comparison view) */}
-              {!scanning && imgDimensions && (!showComparison || !processedImage) && (
-                <div className="absolute inset-0 w-full h-full pointer-events-none z-20 flex items-center justify-center">
-                  {/* SVG Container mapped directly over the image dimensions */}
-                  <div 
-                    className="relative pointer-events-auto"
-                    style={{
-                      width: `${imgDimensions.width}px`,
-                      height: `${imgDimensions.height}px`,
-                    }}
-                  >
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                      {/* Polygon displaying selection */}
-                      <polygon
-                        points={keypoints.map((pt) => `${pt.x * imgDimensions.width},${pt.y * imgDimensions.height}`).join(" ")}
-                        className="fill-primary/20 stroke-primary stroke-[3]"
-                      />
-                    </svg>
 
-                    {/* Corner Handle Dots */}
-                    {keypoints.map((pt, idx) => {
-                      const labels = ["TL", "TR", "BR", "BL"];
-                      return (
-                        <div
-                          key={idx}
-                          onMouseDown={(e) => handleHandleMouseDown(e, idx)}
-                          className="absolute w-5 h-5 -ml-2.5 -mt-2.5 bg-white border-2 border-primary rounded-full cursor-pointer shadow hover:scale-125 transition-transform flex items-center justify-center z-30 group"
-                          style={{
-                            left: `${pt.x * 100}%`,
-                            top: `${pt.y * 100}%`,
-                          }}
-                        >
-                          <span className="text-[7px] font-mono font-bold text-primary select-none pointer-events-none">
-                            {labels[idx]}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -944,19 +878,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
                     AI DEFAULT
                   </span>
                 </button>
-                <button
-                  onClick={() => setSelectedLogo("premium")}
-                  className={`px-4 py-2.5 text-sm font-semibold rounded-xl border text-left flex items-center justify-between transition-all duration-200 ${
-                    selectedLogo === "premium"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-border-light text-text-muted hover:text-text-main"
-                  }`}
-                >
-                  <span>Premium Motors</span>
-                  <span className="text-[10px] font-mono uppercase bg-gray-800 text-white px-2 py-0.5 rounded-full">
-                    DEALERSHIP
-                  </span>
-                </button>
+
                 <button
                   onClick={() => logoInputRef.current?.click()}
                   className={`px-4 py-2.5 text-sm font-semibold rounded-xl border text-left flex items-center justify-between transition-all duration-200 ${
