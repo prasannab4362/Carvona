@@ -187,43 +187,9 @@ async def process_plate(
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     
                     if logo_brand == "carvona":
-                        text = "CARVONA"
-                        font_scale = 1.8
-                        thickness = 6
-                        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
-                        
-                        # Total width: icon (130) + spacing (30) + text_w
-                        total_w = 130 + 30 + text_w
-                        start_x = 30 + (957 - total_w) // 2
-                        
-                        icon_x = start_x + 65
-                        icon_y = 195
-                        
-                        color_green = (22, 163, 74, 255) # Green (BGR)
-                        cv2.circle(logo_img, (icon_x, icon_y), 60, color_green, 5, cv2.LINE_AA)
-                        cv2.circle(logo_img, (icon_x, icon_y), 52, (22, 163, 74, 80), 2, cv2.LINE_AA)
-                        
-                        # Draw car front outline
-                        windshield_pts = np.array([
-                            [icon_x - 20, icon_y - 4],
-                            [icon_x + 20, icon_y - 4],
-                            [icon_x + 12, icon_y - 18],
-                            [icon_x - 12, icon_y - 18]
-                        ], dtype=np.int32)
-                        cv2.polylines(logo_img, [windshield_pts], True, color_green, 3, cv2.LINE_AA)
-                        cv2.line(logo_img, (icon_x - 28, icon_y - 4), (icon_x + 28, icon_y - 4), color_green, 3, cv2.LINE_AA)
-                        cv2.line(logo_img, (icon_x - 28, icon_y - 4), (icon_x - 30, icon_y + 12), color_green, 3, cv2.LINE_AA)
-                        cv2.line(logo_img, (icon_x + 28, icon_y - 4), (icon_x + 30, icon_y + 12), color_green, 3, cv2.LINE_AA)
-                        cv2.rectangle(logo_img, (icon_x - 16, icon_y + 5), (icon_x + 16, icon_y + 18), color_green, 2, cv2.LINE_AA)
-                        for gr_x in range(icon_x - 10, icon_x + 15, 8):
-                            cv2.line(logo_img, (gr_x, icon_y + 5), (gr_x, icon_y + 18), color_green, 1, cv2.LINE_AA)
-                        cv2.circle(logo_img, (icon_x - 23, icon_y + 7), 5, color_green, -1, cv2.LINE_AA)
-                        cv2.circle(logo_img, (icon_x + 23, icon_y + 7), 5, color_green, -1, cv2.LINE_AA)
-                        cv2.line(logo_img, (icon_x - 33, icon_y + 22), (icon_x + 33, icon_y + 22), color_green, 4, cv2.LINE_AA)
-                        
-                        text_x = start_x + 130 + 30
-                        text_y = (logo_h + text_h) // 2
-                        cv2.putText(logo_img, text, (text_x, text_y), font, font_scale, color_green, thickness, cv2.LINE_AA)
+                        # The template image 'carvona_plate_frame.png' already has the
+                        # Carvona logo and text pre-baked on it in high quality.
+                        pass
                     else:
                         # Draw "PREMIUM MOTORS" in white area for other brands
                         text = "PREMIUM MOTORS"
