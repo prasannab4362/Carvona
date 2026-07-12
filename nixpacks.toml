@@ -1,9 +1,0 @@
-# nixpacks.toml
-
-providers = ["node", "python"]
-
-[phases.build]
-cmds = ["npm run build", "python download_model.py"]
-
-[start]
-cmd = "python -m uvicorn main:app --host 127.0.0.1 --port 8000 & npm run start"
