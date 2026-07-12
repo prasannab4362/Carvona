@@ -20,6 +20,8 @@ def download_weights():
                     f.write(chunk)
         print("Model weights saved.")
 
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+
 image = (
     modal.Image.debian_slim(python_version="3.10")
     .pip_install(
@@ -33,7 +35,7 @@ image = (
         "requests==2.32.3"
     )
     .run_function(download_weights)
-    .add_local_file("main.py", remote_path="/root/main.py")
+    .add_local_file(os.path.join(backend_dir, "main.py"), remote_path="/root/main.py")
 )
 
 # 3. Serve the FastAPI app as an ASGI application
