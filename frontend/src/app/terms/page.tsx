@@ -22,7 +22,7 @@ export default function TermsPage() {
             
             <h2 className="text-xl font-bold text-text-main mt-4">1. Agreement to Terms</h2>
             <p>
-              By accessing our website at carvona.vercel.app, you agree to be bound by these terms of service, all applicable laws and regulations, and agree that you are responsible for compliance with any applicable local laws. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+              By accessing our website at carvona.in, you agree to be bound by these terms of service, all applicable laws and regulations, and agree that you are responsible for compliance with any applicable local laws. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
             </p>
 
             <h2 className="text-xl font-bold text-text-main mt-4">2. Use License</h2>

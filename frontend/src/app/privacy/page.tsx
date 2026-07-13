@@ -21,7 +21,7 @@ export default function PrivacyPage() {
             <p><strong>Last Updated: July 2026</strong></p>
             
             <p>
-              At Carvona, accessible from carvona.vercel.app, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by Carvona and how we use it.
+              At Carvona, accessible from carvona.in, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by Carvona and how we use it.
             </p>
 
             <h2 className="text-xl font-bold text-text-main mt-4">1. Data Processing and Image Uploads</h2>
