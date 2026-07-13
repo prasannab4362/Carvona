@@ -53,6 +53,14 @@ export const metadata: Metadata = {
     description: "Automatically blur or replace license plates in seconds using advanced AI. Censor vehicle plates for privacy or replace them with custom dealer logos.",
     images: ["/sample-suv.png"],
   },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/icon.jpg",
+  },
+  verification: {
+    google: "XA2zT7cfHiEvQZkyaIOVoEQJaURy5YAtBneFEhSvGGc",
+  },
 };
 
 export default function RootLayout({
