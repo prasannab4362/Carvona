@@ -95,10 +95,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white text-text-main selection:bg-primary selection:text-white">
         {/* Google AdSense Script Integration */}
-        {/* IMPORTANT: Swap "pub-YOUR_PUBLISHER_ID_HERE" with your actual publisher ID once approved */}
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=pub-YOUR_PUBLISHER_ID_HERE"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4773483299842438"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
