@@ -8,7 +8,7 @@ export default function Footer() {
     <footer className="w-full border-t border-border-light bg-section py-12 md:py-20 mt-auto">
       <div className="max-w-7xl mx-auto px-6 md:px-10 grid grid-cols-1 md:grid-cols-4 gap-10">
         {/* Brand column */}
-        <div className="md:col-span-2 flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden shadow border border-border-light">
               <img src="/logo.jpg" alt="Carvona Logo" className="w-full h-full object-cover" />
@@ -50,6 +50,25 @@ export default function Footer() {
             <li>
               <Link href="/logo-replace" className="hover:text-primary transition-colors">
                 Logo Replacement
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* Company links */}
+        <div className="flex flex-col gap-4">
+          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-text-main">
+            Company
+          </h4>
+          <ul className="flex flex-col gap-2 text-sm text-text-muted">
+            <li>
+              <Link href="/about" className="hover:text-primary transition-colors">
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-primary transition-colors">
+                Contact Us
               </Link>
             </li>
           </ul>
