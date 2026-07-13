@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -94,12 +93,11 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased font-sans`}
     >
       <body className="min-h-full flex flex-col bg-white text-text-main selection:bg-primary selection:text-white">
-        {/* Google AdSense Script Integration */}
-        <Script
+        {/* Google AdSense Script Integration (Static HTML tag for crawler compliance) */}
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4773483299842438"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
 
         {/* JSON-LD Schema Script */}
