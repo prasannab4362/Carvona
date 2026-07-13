@@ -559,6 +559,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
 
     const handleTouchMove = (e: globalThis.TouchEvent) => {
       if (!imgRef.current || e.touches.length === 0) return;
+      if (e.cancelable) e.preventDefault();
       const rect = imgRef.current.getBoundingClientRect();
       const x = e.touches[0].clientX - rect.left;
       const pos = Math.max(0, Math.min(100, (x / rect.width) * 100));
@@ -624,7 +625,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
             <div
               ref={containerRef}
               onMouseMove={handleContainerMouseMove}
-              className="relative w-full h-full flex items-center justify-center overflow-hidden max-h-[500px]"
+              className="relative w-full h-full flex items-center justify-center overflow-hidden max-h-[320px] sm:max-h-[400px] md:max-h-[500px]"
             >
 
 
@@ -662,6 +663,7 @@ export default function Workbench({ defaultTool = "blur", hideTabs = false }: { 
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation();
+                      if (e.cancelable) e.preventDefault();
                       setIsDraggingSlider(true);
                     }}
                   >

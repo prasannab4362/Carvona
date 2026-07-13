@@ -31,8 +31,8 @@ export default function ContactPage() {
                   <Mail className="text-primary shrink-0 w-5 h-5 mt-0.5" />
                   <div>
                     <h4 className="font-bold text-text-main">Email Support</h4>
-                    <a href="mailto:support@carvona.in" className="text-primary hover:underline mt-1 block">
-                      support@carvona.in
+                    <a href="mailto:edadmin@gasai.in" className="text-primary hover:underline mt-1 block">
+                      edadmin@gasai.in
                     </a>
                   </div>
                 </div>
